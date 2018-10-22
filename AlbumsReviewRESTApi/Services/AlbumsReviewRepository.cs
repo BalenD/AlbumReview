@@ -17,10 +17,14 @@ namespace AlbumsReviewRESTApi.Services
             _context = context;
         }
 
-        public void AddArtist(Artist artist)
+        public async void AddArtist(Artist artist)
         {
-            artist.Id = Guid.NewGuid();
-            _context.Artists.Add(artist);
+            if (artist.Id == null)
+            {
+                artist.Id = Guid.NewGuid();
+            }
+            
+            await _context.Artists.AddAsync(artist);
         }
 
         public void DeleteArtistAsync(Artist artist)

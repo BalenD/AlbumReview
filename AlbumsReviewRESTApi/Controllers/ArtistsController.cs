@@ -20,7 +20,7 @@ namespace AlbumsReviewRESTApi.Controllers
             _albumsReviewRepository = albumsReviewRepository;
         }
 
-        
+
         [HttpGet]
         [ArtistResultFilter]
         public async Task<IActionResult> GetArtists()
@@ -52,6 +52,7 @@ namespace AlbumsReviewRESTApi.Controllers
         [HttpPost]
         public async Task<IActionResult> CreateArtist([FromBody] Artist artist)
         {
+
             if (artist == null)
             {
                 return BadRequest();
@@ -61,10 +62,10 @@ namespace AlbumsReviewRESTApi.Controllers
 
             if (!await _albumsReviewRepository.SaveChangesAsync())
             {
-                throw new Exception("creating an artrist failed on save");
+                throw new Exception("creating an artist failed on save");
             }
 
-            return CreatedAtRoute("GetArtist", new { id = artist.Id },  artist);
+            return CreatedAtRoute("GetArtist", new { id = artist.Id }, artist);
         }
 
         [HttpPut("{id}")]
@@ -157,6 +158,31 @@ namespace AlbumsReviewRESTApi.Controllers
             }
 
             return NoContent();
+        }
+
+        [HttpDelete("{id}")]
+        public async Task<IActionResult> DeleteArtist(Guid id)
+        {
+            if (id == null)
+            {
+                return BadRequest();
+            }
+
+            var artistFromRepo = await _albumsReviewRepository.GetArtistAsync(id);
+
+            if (artistFromRepo == null)
+            {
+                return NotFound();
+            }
+
+            _albumsReviewRepository.DeleteArtistAsync(artistFromRepo);
+
+            if (!await _albumsReviewRepository.SaveChangesAsync())
+            {
+                throw new Exception($"deleting for artist {id} failed");
+            }
+
+            return Ok();
         }
     }
 }

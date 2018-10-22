@@ -1,9 +1,6 @@
 ﻿using AlbumsReviewRESTApi.Entities;
 using Microsoft.EntityFrameworkCore;
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 
 namespace AlbumsReviewRESTApi.context
 {
@@ -20,6 +17,7 @@ namespace AlbumsReviewRESTApi.context
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
+
             modelBuilder.Entity<Review>().HasData(
                 
                 new Review()
