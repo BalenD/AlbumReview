@@ -11,6 +11,7 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.HttpsPolicy;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Formatters;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -35,7 +36,11 @@ namespace AlbumsReviewRESTApi
             services.AddMvc(setupAction => 
             {
                 setupAction.ReturnHttpNotAcceptable = true;
-                
+                setupAction.OutputFormatters.Add(new XmlDataContractSerializerOutputFormatter());
+
+                setupAction.InputFormatters.Add(new XmlSerializerInputFormatter(setupAction));
+
+
             })
             .AddJsonOptions(options => 
             {
@@ -71,6 +76,10 @@ namespace AlbumsReviewRESTApi
                 config.CreateMap<Artist, ArtistDto>()
                 .ForMember(dest => dest.Name, opt => opt.MapFrom(src => $"{src.FirstName} {src.LastName}"))
                 .ForMember(dest => dest.Age, opt => opt.MapFrom(src => src.DateOfBirth.CalculateAge()));
+
+                config.CreateMap<Album, AlbumDto>()
+                .ForMember(dest => dest.Released, opt => opt.MapFrom(src => src.Released.DateTime));
+
             });
 
             app.UseHttpsRedirection();

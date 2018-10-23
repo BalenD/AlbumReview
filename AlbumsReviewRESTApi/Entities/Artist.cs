@@ -23,6 +23,6 @@ namespace AlbumsReviewRESTApi.Entities
         public string LastName { get; set; }
 
         public DateTimeOffset DateOfBirth { get; set; }
-        public IEnumerable<Album> Albums { get; set; }
+        public ICollection<Album> Albums { get; set; }
     }
 }

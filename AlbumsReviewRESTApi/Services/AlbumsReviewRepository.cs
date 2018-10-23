@@ -4,6 +4,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using AlbumsReviewRESTApi.context;
 using AlbumsReviewRESTApi.Entities;
+using AlbumsReviewRESTApi.Helpers;
 using Microsoft.EntityFrameworkCore;
 
 namespace AlbumsReviewRESTApi.Services
@@ -15,6 +16,22 @@ namespace AlbumsReviewRESTApi.Services
         public AlbumsReviewRepository(AlbumsReviewContext context)
         {
             _context = context;
+        }
+
+        public async void AddAlbumForArtist(Guid artistId, Album album)
+        {
+            var artist = await GetArtistAsync(artistId);
+
+            if (artist != null)
+            {
+                if (album.Id == Guid.Empty)
+                {
+                    album.Id = Guid.NewGuid();
+                }
+
+                artist.Albums.Add(album);
+            }
+
         }
 
         public async void AddArtist(Artist artist)
@@ -32,12 +49,20 @@ namespace AlbumsReviewRESTApi.Services
             _context.Artists.Remove(artist);
         }
 
-        public async Task<IEnumerable<Album>> GetAlbumsAsync(Guid artistId)
+        public async Task<Album> GetAlbumForArtistAsync(Guid albumId, Guid artistId)
+        {
+            return await _context.Albums
+                .Where(x => x.ArtistId == artistId && x.Id == albumId)
+                .FirstOrDefaultAsync();
+        }
+
+        public async Task<IEnumerable<Album>> GetAlbumsForArtistAsync(Guid artistId)
         {
             return await _context.Albums
                 .Where(x => x.ArtistId == artistId)
                 .OrderBy(x => x.Name)
                 .ToListAsync();
+
         }
 
         public async Task<Artist> GetArtistAsync(Guid artistId)
@@ -45,11 +70,13 @@ namespace AlbumsReviewRESTApi.Services
             return await _context.Artists.FirstOrDefaultAsync(x => x.Id == artistId);
         }
 
-        public async Task<IEnumerable<Artist>> GetArtistsAsync()
+        public async Task<IEnumerable<Artist>> GetArtistsAsync(ArtistsRequestParameters artistsRequestParameters)
         {
+
             return await _context.Artists
                 .OrderBy(x => x.StageName)
                 .ToListAsync();
+
         }
 
         public async Task<IEnumerable<Review>> GetReviewsAsync(Guid albumId)

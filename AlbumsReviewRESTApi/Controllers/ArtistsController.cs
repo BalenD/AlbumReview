@@ -2,10 +2,9 @@
 using AlbumsReviewRESTApi.filters;
 using AlbumsReviewRESTApi.Services;
 using Microsoft.AspNetCore.JsonPatch;
+using AlbumsReviewRESTApi.Helpers;
 using Microsoft.AspNetCore.Mvc;
 using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Threading.Tasks;
 
 namespace AlbumsReviewRESTApi.Controllers
@@ -23,9 +22,17 @@ namespace AlbumsReviewRESTApi.Controllers
 
         [HttpGet]
         [ArtistResultFilter]
-        public async Task<IActionResult> GetArtists()
+        public async Task<IActionResult> GetArtists(ArtistsRequestParameters artistsRequestParameters)
         {
-            var artistEntities = await _albumsReviewRepository.GetArtistsAsync();
+            //  ártistsrequestparamters is for:
+
+            //  TODO: add support for OrderBy
+
+            //  TODO: make sure requested fields for data shaping exist
+
+            //  TODO: add pagination
+
+            var artistEntities = await _albumsReviewRepository.GetArtistsAsync(artistsRequestParameters);
             return Ok(artistEntities);
         }
 
@@ -50,12 +57,18 @@ namespace AlbumsReviewRESTApi.Controllers
         }
 
         [HttpPost]
+        [ArtistResultFilter]
         public async Task<IActionResult> CreateArtist([FromBody] Artist artist)
         {
-
             if (artist == null)
             {
                 return BadRequest();
+            }
+
+            TryValidateModel(artist);
+            if (!ModelState.IsValid)
+            {
+                return new ErrorProcessingEntityObjectResult(ModelState);
             }
 
             _albumsReviewRepository.AddArtist(artist);
@@ -125,8 +138,7 @@ namespace AlbumsReviewRESTApi.Controllers
 
                 if (!ModelState.IsValid)
                 {
-                    //  change later on
-                    throw new Exception();
+                    return new ErrorProcessingEntityObjectResult(ModelState);
                 }
 
                 artist.Id = id;
@@ -148,8 +160,7 @@ namespace AlbumsReviewRESTApi.Controllers
 
             if (!ModelState.IsValid)
             {
-                //  change later on
-                throw new Exception();
+                return new ErrorProcessingEntityObjectResult(ModelState);
             }
 
             if (!await _albumsReviewRepository.SaveChangesAsync())

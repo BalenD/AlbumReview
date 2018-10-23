@@ -19,7 +19,7 @@ namespace AlbumsReviewRESTApi.Entities
 
         public Artist Artist { get; set; }
 
-        public IEnumerable<Review> Reviews { get; set; }
+        public ICollection<Review> Reviews { get; set; }
 
     }
 }
