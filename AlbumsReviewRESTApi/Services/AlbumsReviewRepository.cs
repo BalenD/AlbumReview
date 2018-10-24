@@ -20,17 +20,28 @@ namespace AlbumsReviewRESTApi.Services
 
         public async void AddAlbumForArtist(Guid artistId, Album album)
         {
-            var artist = await GetArtistAsync(artistId);
 
-            if (artist != null)
+            //  TODO: find out why this doesnt work
+            //var artist = await GetArtistAsync(artistId);
+
+            //if (artist != null)
+            //{
+            //    if (album.Id == Guid.Empty)
+            //    {
+            //        album.Id = Guid.NewGuid();
+            //    }
+            //    album.ArtistId = artist.Id;
+            //    artist.Albums.Add(album);
+            //}
+
+            if (album.Id == Guid.Empty)
             {
-                if (album.Id == Guid.Empty)
-                {
-                    album.Id = Guid.NewGuid();
-                }
-
-                artist.Albums.Add(album);
+                album.Id = Guid.NewGuid();
             }
+
+            album.ArtistId = artistId;
+
+            await _context.Albums.AddAsync(album);
 
         }
 
@@ -44,7 +55,17 @@ namespace AlbumsReviewRESTApi.Services
             await _context.Artists.AddAsync(artist);
         }
 
-        public void DeleteArtistAsync(Artist artist)
+        public async Task<bool> ArtistExists(Guid artistId)
+        {
+            return await _context.Artists.AnyAsync(x => x.Id == artistId);
+        }
+
+        public void DeleteAlbum(Album album)
+        {
+            _context.Albums.Remove(album);
+        }
+
+        public void DeleteArtist(Artist artist)
         {
             _context.Artists.Remove(artist);
         }
@@ -67,7 +88,8 @@ namespace AlbumsReviewRESTApi.Services
 
         public async Task<Artist> GetArtistAsync(Guid artistId)
         {
-            return await _context.Artists.FirstOrDefaultAsync(x => x.Id == artistId);
+            return await _context.Artists
+                .FirstOrDefaultAsync(x => x.Id == artistId);
         }
 
         public async Task<IEnumerable<Artist>> GetArtistsAsync(ArtistsRequestParameters artistsRequestParameters)
@@ -91,7 +113,17 @@ namespace AlbumsReviewRESTApi.Services
             return (await _context.SaveChangesAsync() > 0);
         }
 
-        public void UpdateArtistAsync(Artist artist)
+        public void updateAlbumForArtist(Guid artistId, Album album)
+        {
+            if (album.ArtistId == null)
+            {
+                album.ArtistId = artistId;
+            }
+            
+            _context.Albums.Update(album);
+        }
+
+        public void UpdateArtist(Artist artist)
         {
             if (artist.Id == null)
             {

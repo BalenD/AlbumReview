@@ -6,6 +6,8 @@ using AlbumsReviewRESTApi.Helpers;
 using Microsoft.AspNetCore.Mvc;
 using System;
 using System.Threading.Tasks;
+using AlbumsReviewRESTApi.Models;
+using AutoMapper;
 
 namespace AlbumsReviewRESTApi.Controllers
 {
@@ -39,9 +41,9 @@ namespace AlbumsReviewRESTApi.Controllers
 
         [HttpGet("{id}", Name = "GetArtist")]
         [ArtistResultFilter]
-        public async Task<IActionResult> GetArtist(Guid id)
+        public async Task<IActionResult> GetArtist([FromRoute] Guid id)
         {
-            if (id == null)
+            if (id == Guid.Empty)
             {
                 return BadRequest();
             }
@@ -58,7 +60,7 @@ namespace AlbumsReviewRESTApi.Controllers
 
         [HttpPost]
         [ArtistResultFilter]
-        public async Task<IActionResult> CreateArtist([FromBody] Artist artist)
+        public async Task<IActionResult> CreateArtist([FromBody] ArtistForCreationDto artist)
         {
             if (artist == null)
             {
@@ -66,47 +68,58 @@ namespace AlbumsReviewRESTApi.Controllers
             }
 
             TryValidateModel(artist);
+
+
             if (!ModelState.IsValid)
             {
                 return new ErrorProcessingEntityObjectResult(ModelState);
             }
 
-            _albumsReviewRepository.AddArtist(artist);
+            var artistEntity = Mapper.Map<Artist>(artist);
+
+            _albumsReviewRepository.AddArtist(artistEntity);
 
             if (!await _albumsReviewRepository.SaveChangesAsync())
             {
                 throw new Exception("creating an artist failed on save");
             }
 
-            return CreatedAtRoute("GetArtist", new { id = artist.Id }, artist);
+            return CreatedAtRoute("GetArtist", new { id = artist.Id }, artistEntity);
         }
 
         [HttpPut("{id}")]
-        public async Task<IActionResult> UpdateArtist(Guid id, [FromBody] Artist artist)
+        public async Task<IActionResult> UpdateArtist([FromRoute] Guid id, [FromBody] ArtistForUpdateDto artist)
         {
             if (artist == null)
             {
                 return BadRequest();
             }
 
+            if (id == Guid.Empty)
+            {
+                return BadRequest();
+            }
 
-            //  upserting
+            var artistEntity = Mapper.Map<Artist>(artist);
+
+            
             var artistFromRepo = await _albumsReviewRepository.GetArtistAsync(id);
+            //  upserting
             if (artistFromRepo == null)
             {
-                artist.Id = id;
-                _albumsReviewRepository.AddArtist(artist);
+                artistEntity.Id = id;
+                _albumsReviewRepository.AddArtist(artistEntity);
 
                 if (!await _albumsReviewRepository.SaveChangesAsync())
                 {
                     throw new Exception($"Upserting for artist {id} failed");
                 }
 
-                return CreatedAtRoute("GetArtist", new { id = artist.Id }, artist);
+                return CreatedAtRoute("GetArtist", new { id = artistEntity.Id }, artist);
 
             }
 
-            _albumsReviewRepository.UpdateArtistAsync(artist);
+            _albumsReviewRepository.UpdateArtist(artistEntity);
 
             if (!await _albumsReviewRepository.SaveChangesAsync())
             {
@@ -118,7 +131,7 @@ namespace AlbumsReviewRESTApi.Controllers
         }
 
         [HttpPatch("{id}")]
-        public async Task<IActionResult> PartiallyUpdateArtist(Guid id, [FromBody] JsonPatchDocument<Artist> patchDoc)
+        public async Task<IActionResult> PartiallyUpdateArtist([FromRoute] Guid id, [FromBody] JsonPatchDocument<Artist> patchDoc)
         {
             if (patchDoc == null)
             {
@@ -172,9 +185,9 @@ namespace AlbumsReviewRESTApi.Controllers
         }
 
         [HttpDelete("{id}")]
-        public async Task<IActionResult> DeleteArtist(Guid id)
+        public async Task<IActionResult> DeleteArtist([FromRoute] Guid id)
         {
-            if (id == null)
+            if (id == Guid.Empty)
             {
                 return BadRequest();
             }
@@ -186,7 +199,7 @@ namespace AlbumsReviewRESTApi.Controllers
                 return NotFound();
             }
 
-            _albumsReviewRepository.DeleteArtistAsync(artistFromRepo);
+            _albumsReviewRepository.DeleteArtist(artistFromRepo);
 
             if (!await _albumsReviewRepository.SaveChangesAsync())
             {

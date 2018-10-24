@@ -73,12 +73,24 @@ namespace AlbumsReviewRESTApi
 
             AutoMapper.Mapper.Initialize(config =>
             {
+
+                config.CreateMap<ArtistForCreationDto, Artist>();
+                config.CreateMap<ArtistForUpdateDto, Artist>();
+
+                
+
                 config.CreateMap<Artist, ArtistDto>()
                 .ForMember(dest => dest.Name, opt => opt.MapFrom(src => $"{src.FirstName} {src.LastName}"))
                 .ForMember(dest => dest.Age, opt => opt.MapFrom(src => src.DateOfBirth.CalculateAge()));
 
+                config.CreateMap<AlbumForCreationDto, Album>();
+
+                config.CreateMap<AlbumForUpdateDto, Album>();
+
+
                 config.CreateMap<Album, AlbumDto>()
-                .ForMember(dest => dest.Released, opt => opt.MapFrom(src => src.Released.DateTime));
+                .ForMember(dest => dest.Released, opt => opt.MapFrom(src => src.Released.DateTime))
+                .ForMember(dest => dest.Age, opt => opt.MapFrom(src => src.Released.CalculateAge()));
 
             });
 

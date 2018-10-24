@@ -31,7 +31,7 @@ namespace AlbumsReviewRESTApi.filters
             }
             else
             {
-                resultFromControllerAction.Value = Mapper.Map<ArtistDto>(resultFromControllerAction.Value);
+                resultFromControllerAction.Value = Mapper.Map<AlbumDto>(resultFromControllerAction.Value);
             }
 
 
