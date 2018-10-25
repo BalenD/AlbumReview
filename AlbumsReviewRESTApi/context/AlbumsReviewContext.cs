@@ -12,11 +12,10 @@ namespace AlbumsReviewRESTApi.context
 
         public AlbumsReviewContext(DbContextOptions<AlbumsReviewContext> options) : base (options)
         {
-            //  fir development purpose
-
+            //  for development purposes
             //Database.EnsureDeleted();
             //Database.Migrate();
-            
+
         }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)

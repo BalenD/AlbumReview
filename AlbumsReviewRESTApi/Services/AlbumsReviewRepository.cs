@@ -125,10 +125,6 @@ namespace AlbumsReviewRESTApi.Services
 
         public void UpdateArtist(Artist artist)
         {
-            if (artist.Id == null)
-            {
-                artist.Id = Guid.NewGuid();
-            }
             _context.Artists.Update(artist);
         }
     }

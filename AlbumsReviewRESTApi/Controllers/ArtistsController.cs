@@ -100,13 +100,13 @@ namespace AlbumsReviewRESTApi.Controllers
                 return BadRequest();
             }
 
-            var artistEntity = Mapper.Map<Artist>(artist);
-
+          
             
             var artistFromRepo = await _albumsReviewRepository.GetArtistAsync(id);
             //  upserting
             if (artistFromRepo == null)
             {
+                var artistEntity = Mapper.Map<Artist>(artist);
                 artistEntity.Id = id;
                 _albumsReviewRepository.AddArtist(artistEntity);
 
@@ -115,11 +115,14 @@ namespace AlbumsReviewRESTApi.Controllers
                     throw new Exception($"Upserting for artist {id} failed");
                 }
 
-                return CreatedAtRoute("GetArtist", new { id = artistEntity.Id }, artist);
+                var artistToReturn = Mapper.Map<ArtistDto>(artistEntity);
+
+                return CreatedAtRoute("GetArtist", new { id = artistToReturn.Id }, artistToReturn);
 
             }
 
-            _albumsReviewRepository.UpdateArtist(artistEntity);
+            Mapper.Map(artist, artistFromRepo);
+            _albumsReviewRepository.UpdateArtist(artistFromRepo);
 
             if (!await _albumsReviewRepository.SaveChangesAsync())
             {
@@ -131,9 +134,14 @@ namespace AlbumsReviewRESTApi.Controllers
         }
 
         [HttpPatch("{id}")]
-        public async Task<IActionResult> PartiallyUpdateArtist([FromRoute] Guid id, [FromBody] JsonPatchDocument<Artist> patchDoc)
+        public async Task<IActionResult> PartiallyUpdateArtist([FromRoute] Guid id, [FromBody] JsonPatchDocument<ArtistForUpdateDto> patchDoc)
         {
             if (patchDoc == null)
+            {
+                return BadRequest();
+            }
+
+            if (id == Guid.Empty)
             {
                 return BadRequest();
             }
@@ -143,38 +151,47 @@ namespace AlbumsReviewRESTApi.Controllers
             //  upserting
             if (artistFromRepo == null)
             {
-                var artist = new Artist();
+                var artistForUpdateDto = new ArtistForUpdateDto();
 
-                patchDoc.ApplyTo(artist, ModelState);
+                patchDoc.ApplyTo(artistForUpdateDto, ModelState);
 
-                TryValidateModel(artist);
+                TryValidateModel(artistForUpdateDto);
 
                 if (!ModelState.IsValid)
                 {
                     return new ErrorProcessingEntityObjectResult(ModelState);
                 }
 
-                artist.Id = id;
+                var artistToAdd = Mapper.Map<Artist>(artistForUpdateDto);
+                 artistToAdd.Id = id;
 
-                _albumsReviewRepository.AddArtist(artist);
+                _albumsReviewRepository.AddArtist(artistToAdd);
 
                 if (!await _albumsReviewRepository.SaveChangesAsync())
                 {
                     throw new Exception($"Upserting for artist {id} failed");
                 }
 
-                return CreatedAtRoute("GetArtist", new { id = artist.Id }, artist);
+                var artistToReturn = Mapper.Map<ArtistDto>(artistToAdd);
+
+                return CreatedAtRoute("GetArtist", new { id = artistToReturn.Id }, artistToReturn);
 
             }
 
-            patchDoc.ApplyTo(artistFromRepo, ModelState);
+            var artistToPatch = Mapper.Map<ArtistForUpdateDto>(artistFromRepo);
 
-            TryValidateModel(artistFromRepo);
+            patchDoc.ApplyTo(artistToPatch, ModelState);
+
+            TryValidateModel(artistToPatch);
 
             if (!ModelState.IsValid)
             {
                 return new ErrorProcessingEntityObjectResult(ModelState);
             }
+
+            Mapper.Map(artistToPatch, artistFromRepo);
+
+            _albumsReviewRepository.UpdateArtist(artistFromRepo);
 
             if (!await _albumsReviewRepository.SaveChangesAsync())
             {

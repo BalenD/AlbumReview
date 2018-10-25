@@ -145,11 +145,16 @@ namespace AlbumsReviewRESTApi.Controllers
         }
 
         [HttpPatch("{id}")]
-        public async Task<IActionResult> PartiallyUpdateAlbum([FromRoute] Guid artistId, [FromRoute] Guid id, JsonPatchDocument<Album> patchDoc)
+        public async Task<IActionResult> PartiallyUpdateAlbum([FromRoute] Guid artistId, [FromRoute] Guid id, JsonPatchDocument<AlbumForUpdateDto> patchDoc)
         {
             if (patchDoc == null)
             {
                 return BadRequest();
+            }
+
+            if (!await _albumsReviewRepository.ArtistExists(artistId))
+            {
+                return NotFound();
             }
 
             var albumFromRepo = await _albumsReviewRepository.GetAlbumForArtistAsync(id, artistId);
@@ -158,38 +163,48 @@ namespace AlbumsReviewRESTApi.Controllers
 
             if (albumFromRepo == null)
             {
-                var album = new Album();
+                var albumForUpdateDto = new AlbumForUpdateDto();
 
-                patchDoc.ApplyTo(album, ModelState);
+                patchDoc.ApplyTo(albumForUpdateDto, ModelState);
 
-                TryValidateModel(album);
+                TryValidateModel(albumForUpdateDto);
 
                 if (!ModelState.IsValid)
                 {
                     return new ErrorProcessingEntityObjectResult(ModelState);
                 }
 
-                album.Id = id;
+                var albumToAdd = Mapper.Map<Album>(albumForUpdateDto);
 
-                _albumsReviewRepository.AddAlbumForArtist(artistId, album);
+                albumToAdd.Id = id;
+
+                _albumsReviewRepository.AddAlbumForArtist(artistId, albumToAdd);
 
                 if (!await _albumsReviewRepository.SaveChangesAsync())
                 {
-                    throw new Exception($"Upserting album {album.Id} failed for artist {artistId}");
+                    throw new Exception($"Upserting album {albumToAdd.Id} failed for artist {artistId}");
                 }
 
-                return CreatedAtRoute("GetAlbum", new { artistId, id = album.Id }, album);
+                var albumToReturn = Mapper.Map<AlbumDto>(albumToAdd);
+
+                return CreatedAtRoute("GetAlbum", new { artistId, id = albumToReturn.Id }, albumToReturn);
             }
 
+            var albumToPatch = Mapper.Map<AlbumForUpdateDto>(albumFromRepo);
 
-            patchDoc.ApplyTo(albumFromRepo, ModelState);
+            patchDoc.ApplyTo(albumToPatch, ModelState);
 
-            TryValidateModel(albumFromRepo);
+            TryValidateModel(albumToPatch);
 
             if (!ModelState.IsValid)
             {
                 return new ErrorProcessingEntityObjectResult(ModelState);
             }
+
+
+            Mapper.Map(albumToPatch, albumFromRepo);
+
+            _albumsReviewRepository.updateAlbumForArtist(artistId, albumFromRepo);
 
             if (!await _albumsReviewRepository.SaveChangesAsync())
             {
