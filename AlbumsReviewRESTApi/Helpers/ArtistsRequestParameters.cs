@@ -25,5 +25,7 @@ namespace AlbumsReviewRESTApi.Helpers
         public int PageNumber { get; set; } = 1;
         public string OrderBy { get; set; } = "StageName";
         public string Fields { get; set; }
+        public string SearchQuery { get; set; }
+        public bool IncludeMetadata { get; set; }
     }
 }

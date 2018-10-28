@@ -3,6 +3,7 @@ using AlbumsReviewRESTApi.filters;
 using AlbumsReviewRESTApi.Helpers;
 using AlbumsReviewRESTApi.Models;
 using AlbumsReviewRESTApi.Services;
+using AlbumsReviewRESTApi.Services.Repositories;
 using AutoMapper;
 using Microsoft.AspNetCore.JsonPatch;
 using Microsoft.AspNetCore.Mvc;
@@ -16,17 +17,20 @@ namespace AlbumsReviewRESTApi.Controllers
     [Route("api/artists/{artistId}/albums")]
     public class AlbumsController : Controller
     {
-        private IAlbumsReviewRepository _albumsReviewRepository;
+        private IAlbumRepository _albumsReviewRepository;
+        private IPropertyMappingService _propertyMappingService;
 
-        public AlbumsController(IAlbumsReviewRepository albumsReviewRepository)
+        public AlbumsController(IAlbumRepository albumsReviewRepository, IPropertyMappingService propertyMappingService)
         {
             _albumsReviewRepository = albumsReviewRepository;
+            _propertyMappingService = propertyMappingService;
         }
 
         [HttpGet]
         [AlbumResultFilter]
         public async Task<IActionResult> GetAlbums([FromRoute] Guid artistId)
         {
+
             var albumEntities = await _albumsReviewRepository.GetAlbumsForArtistAsync(artistId);
             return Ok(albumEntities);
         }
@@ -69,12 +73,12 @@ namespace AlbumsReviewRESTApi.Controllers
         [AlbumResultFilter]
         public async Task<IActionResult> GetAlbum([FromRoute] Guid id, [FromRoute] Guid artistId)
         {
-            if (id == null)
+            if (id == Guid.Empty)
             {
                 return BadRequest();
             }
 
-            if (artistId == null)
+            if (artistId == Guid.Empty)
             {
                 return BadRequest();
             }

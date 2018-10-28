@@ -1,6 +1,6 @@
 ﻿using AlbumsReviewRESTApi.Entities;
 using AlbumsReviewRESTApi.filters;
-using AlbumsReviewRESTApi.Services;
+using AlbumsReviewRESTApi.Services.Repositories;
 using Microsoft.AspNetCore.JsonPatch;
 using AlbumsReviewRESTApi.Helpers;
 using Microsoft.AspNetCore.Mvc;
@@ -8,34 +8,74 @@ using System;
 using System.Threading.Tasks;
 using AlbumsReviewRESTApi.Models;
 using AutoMapper;
+using AlbumsReviewRESTApi.Services;
+using System.Collections.Generic;
+using System.Dynamic;
 
 namespace AlbumsReviewRESTApi.Controllers
 {
     [Route("api/artists")]
     public class ArtistsController : Controller
     {
-        private IAlbumsReviewRepository _albumsReviewRepository;
+        private IArtistRepository _albumsReviewRepository;
+        private IPropertyMappingService _propertyMappingService;
+        private ITypeHelperService _typeHelperService;
+        private IUrlHelper _urlHelper;
 
-        public ArtistsController(IAlbumsReviewRepository albumsReviewRepository)
+        public ArtistsController(IArtistRepository albumsReviewRepository, IPropertyMappingService propertyMappingService,
+                                 ITypeHelperService typeHelperService, IUrlHelper urlHelper)
         {
             _albumsReviewRepository = albumsReviewRepository;
+            _propertyMappingService = propertyMappingService;
+            _typeHelperService = typeHelperService;
+            _urlHelper = urlHelper;
         }
 
 
-        [HttpGet]
-        [ArtistResultFilter]
+        [HttpGet(Name = "GetArtists")]
         public async Task<IActionResult> GetArtists(ArtistsRequestParameters artistsRequestParameters)
         {
-            //  ártistsrequestparamters is for:
 
-            //  TODO: add support for OrderBy
+            if (!_propertyMappingService.validMappingExistsFor<ArtistDto, Artist>(artistsRequestParameters.Fields))
+            {
+                return BadRequest();
+            }
 
-            //  TODO: make sure requested fields for data shaping exist
+            if (!_typeHelperService.TypeHasProperties<ArtistDto>(artistsRequestParameters.Fields))
+            {
+                return BadRequest();
+            }
 
-            //  TODO: add pagination
 
-            var artistEntities = await _albumsReviewRepository.GetArtistsAsync(artistsRequestParameters);
-            return Ok(artistEntities);
+            var artistPagedList = await _albumsReviewRepository.GetArtistsAsync(artistsRequestParameters);
+
+            var previousPageLink = artistPagedList.HasPrevious ? CreateUrlForArtistResource(artistsRequestParameters, PageType.PreviousPage) : null;
+            var nextPageLink = artistPagedList.HasNext ? CreateUrlForArtistResource(artistsRequestParameters, PageType.NextPage) : null;
+
+            var paginationMetaData = new PaginationMetadata()
+            {
+                TotalCount = artistPagedList.TotalCount,
+                PageSize = artistPagedList.PageSize,
+                CurrentPage = artistPagedList.CurrentPage,
+                TotalPages = artistPagedList.TotalPages,
+                PreviousPageLink = previousPageLink,
+                NextPageLink = nextPageLink
+            };
+
+
+            Response.Headers.Add("X-Pagination", Newtonsoft.Json.JsonConvert.SerializeObject(paginationMetaData));
+
+            var artists = Mapper.Map<IEnumerable<ArtistDto>>(artistPagedList);
+
+            if (artistsRequestParameters.IncludeMetadata)
+            {
+                var records = artists.ShapeData(artistsRequestParameters.Fields);
+
+                var artistsWithMetadata = new EntityWithPaginationMetadataDto<ExpandoObject>(paginationMetaData, records);
+                return Ok(artistsWithMetadata);
+            }
+            
+            return Ok(artists.ShapeData(artistsRequestParameters.Fields));
         }
 
 
@@ -100,8 +140,8 @@ namespace AlbumsReviewRESTApi.Controllers
                 return BadRequest();
             }
 
-          
-            
+
+
             var artistFromRepo = await _albumsReviewRepository.GetArtistAsync(id);
             //  upserting
             if (artistFromRepo == null)
@@ -163,7 +203,7 @@ namespace AlbumsReviewRESTApi.Controllers
                 }
 
                 var artistToAdd = Mapper.Map<Artist>(artistForUpdateDto);
-                 artistToAdd.Id = id;
+                artistToAdd.Id = id;
 
                 _albumsReviewRepository.AddArtist(artistToAdd);
 
@@ -224,6 +264,42 @@ namespace AlbumsReviewRESTApi.Controllers
             }
 
             return Ok();
+        }
+
+
+        private string CreateUrlForArtistResource(ArtistsRequestParameters artistsRequestParameter, PageType pageType)
+        {
+            switch (pageType)
+            {
+                case PageType.PreviousPage:
+                    return _urlHelper.Link("GetArtists", new
+                    {
+                        fields = artistsRequestParameter.Fields,
+                        orderBy = artistsRequestParameter.OrderBy,
+                        searchQuery = artistsRequestParameter.SearchQuery,
+                        pageNumber = artistsRequestParameter.PageNumber - 1,
+                        pageSize = artistsRequestParameter.PageSize
+
+                    });
+                case PageType.NextPage:
+                    return _urlHelper.Link("GetArtists", new
+                    {
+                        fields = artistsRequestParameter.Fields,
+                        orderBy = artistsRequestParameter.OrderBy,
+                        searchQuery = artistsRequestParameter.SearchQuery,
+                        pageNumber = artistsRequestParameter.PageNumber + 1,
+                        pageSize = artistsRequestParameter.PageSize
+                    });
+                default:
+                    return _urlHelper.Link("GetArtists", new
+                    {
+                        fields = artistsRequestParameter.Fields,
+                        orderBy = artistsRequestParameter.OrderBy,
+                        searchQuery = artistsRequestParameter.SearchQuery,
+                        pageNumber = artistsRequestParameter.PageNumber,
+                        pageSize = artistsRequestParameter.PageSize
+                    });
+            }
         }
     }
 }

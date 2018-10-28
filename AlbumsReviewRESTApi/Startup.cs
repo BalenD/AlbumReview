@@ -7,11 +7,14 @@ using AlbumsReviewRESTApi.Entities;
 using AlbumsReviewRESTApi.Helpers;
 using AlbumsReviewRESTApi.Models;
 using AlbumsReviewRESTApi.Services;
+using AlbumsReviewRESTApi.Services.Repositories;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.HttpsPolicy;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Formatters;
+using Microsoft.AspNetCore.Mvc.Infrastructure;
+using Microsoft.AspNetCore.Mvc.Routing;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -53,9 +56,21 @@ namespace AlbumsReviewRESTApi
             services.AddDbContext<AlbumsReviewContext>(x => x.UseSqlServer(connectionString));
             //  consider  later between scoped or transcient
             //  and change to multiple repositorys
-            services.AddScoped<IAlbumsReviewRepository, AlbumsReviewRepository>();
+            services.AddScoped<IArtistRepository, ArtistRepository>();
+            services.AddScoped<IAlbumRepository, AlbumRepository>();
+            services.AddScoped<IReviewRepository, ReviewRepository>();
 
+            services.AddSingleton<IActionContextAccessor, ActionContextAccessor>();
 
+            services.AddScoped<IUrlHelper, UrlHelper>(implementationFactory => 
+            {
+                var actionContext = implementationFactory.GetService<IActionContextAccessor>().ActionContext;
+                return new UrlHelper(actionContext);
+            });
+
+            services.AddTransient<IPropertyMappingService, PropertyMappingService>();
+
+            services.AddTransient<ITypeHelperService, TypeHelperService>();
 
         }
 
