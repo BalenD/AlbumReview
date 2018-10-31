@@ -40,7 +40,7 @@ namespace AlbumsReviewRESTApi.Services.Repositories
                 .FirstOrDefaultAsync(x => x.Id == artistId);
         }
 
-        public async Task<PagedList<Artist>> GetArtistsAsync(ArtistsRequestParameters artistsRequestParameters)
+        public async Task<PagedList<Artist>> GetArtistsAsync(RequestParameters artistsRequestParameters)
         {
             var collectionBeforePaging = await _context.Artists
                             .ApplySort(artistsRequestParameters.OrderBy, _propertyMappingService.GetPropertyMapping<ArtistDto, Artist>()).ToListAsync();

@@ -1,8 +1,9 @@
 ﻿using AlbumsReviewRESTApi.context;
 using AlbumsReviewRESTApi.Entities;
+using AlbumsReviewRESTApi.Helpers;
+using AlbumsReviewRESTApi.Models;
 using Microsoft.EntityFrameworkCore;
 using System;
-using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -10,23 +11,58 @@ namespace AlbumsReviewRESTApi.Services.Repositories
 {
     public class ReviewRepository : Repository, IReviewRepository
     {
-        public ReviewRepository(AlbumsReviewContext context) : base(context)
-        {
+        private IPropertyMappingService _propertyMappingService;
 
+        public ReviewRepository(AlbumsReviewContext context, IPropertyMappingService propertyMappingService) : base(context)
+        {
+            _propertyMappingService = propertyMappingService;
         }
 
-        public Task<Review> GetReviewForAlbum(Guid albumId, Guid reviewId)
+        public async Task AddReviewForAlbumAsync(Guid albumId, Review reviewToCreate)
         {
-            throw new NotImplementedException();
+            var album = await _context.Albums.Where(x => x.Id == albumId).FirstOrDefaultAsync();
+
+            if (album != null)
+            {
+                if (reviewToCreate.Id == Guid.Empty)
+                {
+                    reviewToCreate.Id = Guid.NewGuid();
+                }
+                reviewToCreate.AlbumId = albumId;
+                album.Reviews.Add(reviewToCreate);
+            }
         }
 
-        public async Task<IEnumerable<Review>> GetReviewsForAlbumAsync(Guid albumId)
+        public void DeleteReviewForAlbum(Review reviewToDelete)
         {
-            return await _context.Reviews
-                .Where(x => x.AlbumId == albumId)
-                .ToListAsync();
+            _context.Reviews.Remove(reviewToDelete);
         }
 
-       
+        public async Task<Review> GetReviewForAlbumAsync(Guid albumId, Guid reviewId)
+        {
+            return await _context.Reviews.Where(x => x.AlbumId == albumId && x.Id == reviewId).FirstOrDefaultAsync();
+        }
+
+        public async Task<PagedList<Review>> GetReviewsForAlbumAsync(Guid albumId, RequestParameters reviewRequestParameters)
+        {
+            var collectionBeforePaging = await _context.Reviews.Where(x => x.AlbumId == albumId)
+                           .ApplySort(reviewRequestParameters.OrderBy, _propertyMappingService.GetPropertyMapping<ReviewDto, Review>()).ToListAsync();
+
+
+            //  possibly add some searching
+            
+
+
+            return PagedList<Review>.Create(collectionBeforePaging.AsQueryable(), reviewRequestParameters.PageNumber, reviewRequestParameters.PageSize);
+        }
+
+        public void UpdateReviewForAlbum(Guid albumID, Review reviewToUpdate)
+        {
+            if (reviewToUpdate.AlbumId == null)
+            {
+                reviewToUpdate.AlbumId = albumID;
+            }
+            _context.Reviews.Update(reviewToUpdate);
+        }
     }
 }

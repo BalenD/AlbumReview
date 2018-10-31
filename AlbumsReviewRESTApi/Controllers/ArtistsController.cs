@@ -17,15 +17,15 @@ namespace AlbumsReviewRESTApi.Controllers
     [Route("api/artists")]
     public class ArtistsController : Controller
     {
-        private IArtistRepository _albumsReviewRepository;
+        private IArtistRepository _artistRepository;
         private IPropertyMappingService _propertyMappingService;
         private ITypeHelperService _typeHelperService;
         private IUrlHelper _urlHelper;
 
-        public ArtistsController(IArtistRepository albumsReviewRepository, IPropertyMappingService propertyMappingService,
+        public ArtistsController(IArtistRepository artistRepository, IPropertyMappingService propertyMappingService,
                                  ITypeHelperService typeHelperService, IUrlHelper urlHelper)
         {
-            _albumsReviewRepository = albumsReviewRepository;
+            _artistRepository = artistRepository;
             _propertyMappingService = propertyMappingService;
             _typeHelperService = typeHelperService;
             _urlHelper = urlHelper;
@@ -33,8 +33,12 @@ namespace AlbumsReviewRESTApi.Controllers
 
 
         [HttpGet(Name = "GetArtists")]
-        public async Task<IActionResult> GetArtists(ArtistsRequestParameters artistsRequestParameters)
+        public async Task<IActionResult> GetArtists(RequestParameters artistsRequestParameters)
         {
+            if (string.IsNullOrWhiteSpace(artistsRequestParameters.OrderBy))
+            {
+                artistsRequestParameters.OrderBy = "StageName";
+            }
 
             if (!_propertyMappingService.validMappingExistsFor<ArtistDto, Artist>(artistsRequestParameters.Fields))
             {
@@ -47,7 +51,7 @@ namespace AlbumsReviewRESTApi.Controllers
             }
 
 
-            var artistPagedList = await _albumsReviewRepository.GetArtistsAsync(artistsRequestParameters);
+            var artistPagedList = await _artistRepository.GetArtistsAsync(artistsRequestParameters);
 
             var previousPageLink = artistPagedList.HasPrevious ? CreateUrlForArtistResource(artistsRequestParameters, PageType.PreviousPage) : null;
             var nextPageLink = artistPagedList.HasNext ? CreateUrlForArtistResource(artistsRequestParameters, PageType.NextPage) : null;
@@ -80,22 +84,41 @@ namespace AlbumsReviewRESTApi.Controllers
 
 
         [HttpGet("{id}", Name = "GetArtist")]
-        [ArtistResultFilter]
-        public async Task<IActionResult> GetArtist([FromRoute] Guid id)
+        public async Task<IActionResult> GetArtist([FromRoute] Guid id, [FromQuery] string fields)
         {
+
             if (id == Guid.Empty)
             {
                 return BadRequest();
             }
 
-            var artistFromRepo = await _albumsReviewRepository.GetArtistAsync(id);
+            var artistFromRepo = await _artistRepository.GetArtistAsync(id);
 
             if (artistFromRepo == null)
             {
                 return NotFound();
             }
 
-            return Ok(artistFromRepo);
+            if (fields != null)
+            {
+                if (!_propertyMappingService.validMappingExistsFor<ArtistDto, Artist>(fields))
+                {
+                    return BadRequest();
+                }
+
+                if (!_typeHelperService.TypeHasProperties<ArtistDto>(fields))
+                {
+                    return BadRequest();
+                }
+
+                var artist = Mapper.Map<ArtistDto>(artistFromRepo);
+
+                return Ok(artist.ShapeData(fields));
+
+            }
+
+            var artistToReturn = Mapper.Map<ArtistDto>(artistFromRepo);
+            return Ok(artistToReturn);
         }
 
         [HttpPost]
@@ -117,9 +140,9 @@ namespace AlbumsReviewRESTApi.Controllers
 
             var artistEntity = Mapper.Map<Artist>(artist);
 
-            _albumsReviewRepository.AddArtist(artistEntity);
+            _artistRepository.AddArtist(artistEntity);
 
-            if (!await _albumsReviewRepository.SaveChangesAsync())
+            if (!await _artistRepository.SaveChangesAsync())
             {
                 throw new Exception("creating an artist failed on save");
             }
@@ -142,15 +165,15 @@ namespace AlbumsReviewRESTApi.Controllers
 
 
 
-            var artistFromRepo = await _albumsReviewRepository.GetArtistAsync(id);
+            var artistFromRepo = await _artistRepository.GetArtistAsync(id);
             //  upserting
             if (artistFromRepo == null)
             {
                 var artistEntity = Mapper.Map<Artist>(artist);
                 artistEntity.Id = id;
-                _albumsReviewRepository.AddArtist(artistEntity);
+                _artistRepository.AddArtist(artistEntity);
 
-                if (!await _albumsReviewRepository.SaveChangesAsync())
+                if (!await _artistRepository.SaveChangesAsync())
                 {
                     throw new Exception($"Upserting for artist {id} failed");
                 }
@@ -162,9 +185,9 @@ namespace AlbumsReviewRESTApi.Controllers
             }
 
             Mapper.Map(artist, artistFromRepo);
-            _albumsReviewRepository.UpdateArtist(artistFromRepo);
+            _artistRepository.UpdateArtist(artistFromRepo);
 
-            if (!await _albumsReviewRepository.SaveChangesAsync())
+            if (!await _artistRepository.SaveChangesAsync())
             {
                 throw new Exception($"updating for artist {id} failed");
             }
@@ -186,7 +209,7 @@ namespace AlbumsReviewRESTApi.Controllers
                 return BadRequest();
             }
 
-            var artistFromRepo = await _albumsReviewRepository.GetArtistAsync(id);
+            var artistFromRepo = await _artistRepository.GetArtistAsync(id);
 
             //  upserting
             if (artistFromRepo == null)
@@ -205,9 +228,9 @@ namespace AlbumsReviewRESTApi.Controllers
                 var artistToAdd = Mapper.Map<Artist>(artistForUpdateDto);
                 artistToAdd.Id = id;
 
-                _albumsReviewRepository.AddArtist(artistToAdd);
+                _artistRepository.AddArtist(artistToAdd);
 
-                if (!await _albumsReviewRepository.SaveChangesAsync())
+                if (!await _artistRepository.SaveChangesAsync())
                 {
                     throw new Exception($"Upserting for artist {id} failed");
                 }
@@ -231,9 +254,9 @@ namespace AlbumsReviewRESTApi.Controllers
 
             Mapper.Map(artistToPatch, artistFromRepo);
 
-            _albumsReviewRepository.UpdateArtist(artistFromRepo);
+            _artistRepository.UpdateArtist(artistFromRepo);
 
-            if (!await _albumsReviewRepository.SaveChangesAsync())
+            if (!await _artistRepository.SaveChangesAsync())
             {
                 throw new Exception($"updating for artist {id} failed");
             }
@@ -249,16 +272,16 @@ namespace AlbumsReviewRESTApi.Controllers
                 return BadRequest();
             }
 
-            var artistFromRepo = await _albumsReviewRepository.GetArtistAsync(id);
+            var artistFromRepo = await _artistRepository.GetArtistAsync(id);
 
             if (artistFromRepo == null)
             {
                 return NotFound();
             }
 
-            _albumsReviewRepository.DeleteArtist(artistFromRepo);
+            _artistRepository.DeleteArtist(artistFromRepo);
 
-            if (!await _albumsReviewRepository.SaveChangesAsync())
+            if (!await _artistRepository.SaveChangesAsync())
             {
                 throw new Exception($"deleting for artist {id} failed");
             }
@@ -267,7 +290,7 @@ namespace AlbumsReviewRESTApi.Controllers
         }
 
 
-        private string CreateUrlForArtistResource(ArtistsRequestParameters artistsRequestParameter, PageType pageType)
+        private string CreateUrlForArtistResource(RequestParameters artistsRequestParameter, PageType pageType)
         {
             switch (pageType)
             {

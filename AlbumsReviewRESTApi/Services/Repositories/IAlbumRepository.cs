@@ -9,9 +9,9 @@ namespace AlbumsReviewRESTApi.Services.Repositories
     {
         Task<IEnumerable<Album>> GetAlbumsForArtistAsync(Guid artistId);
         Task<Album> GetAlbumForArtistAsync(Guid albumId, Guid artistId);
-        void AddAlbumForArtist(Guid artistId, Album album);
+        Task AddAlbumForArtist(Guid artistId, Album album);
         void DeleteAlbum(Album album);
-        void updateAlbumForArtist(Guid artistId, Album album);
+        void UpdateAlbumForArtist(Guid artistId, Album album);
         
     }
 }

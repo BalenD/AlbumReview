@@ -8,7 +8,7 @@ namespace AlbumsReviewRESTApi.Services.Repositories
 {
     public interface IArtistRepository : IRepository
     {
-        Task<PagedList<Artist>> GetArtistsAsync(ArtistsRequestParameters artistsRequestParameters);
+        Task<PagedList<Artist>> GetArtistsAsync(RequestParameters artistsRequestParameters);
         Task<Artist> GetArtistAsync(Guid artistId);
         void UpdateArtist(Artist artist);
         void DeleteArtist(Artist artist);

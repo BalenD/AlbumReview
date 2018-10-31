@@ -5,10 +5,10 @@ using System.Threading.Tasks;
 
 namespace AlbumsReviewRESTApi.Helpers
 {
-    public class ArtistsRequestParameters
+    public class RequestParameters
     {
         const int maxPageSize = 20;
-        private int _pageSize = 1;
+        private int _pageSize = 10;
         
         public int PageSize
         {
@@ -23,7 +23,7 @@ namespace AlbumsReviewRESTApi.Helpers
         }
 
         public int PageNumber { get; set; } = 1;
-        public string OrderBy { get; set; } = "StageName";
+        public string OrderBy { get; set; }
         public string Fields { get; set; }
         public string SearchQuery { get; set; }
         public bool IncludeMetadata { get; set; }

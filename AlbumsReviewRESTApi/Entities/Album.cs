@@ -8,6 +8,10 @@ namespace AlbumsReviewRESTApi.Entities
     [Table("Albums")]
     public class Album
     {
+        public Album()
+        {
+            Reviews = new List<Review>();
+        }
         [Key]
         public Guid Id { get; set; }
 

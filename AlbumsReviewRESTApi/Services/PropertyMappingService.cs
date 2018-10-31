@@ -17,11 +17,20 @@ namespace AlbumsReviewRESTApi.Services
             { "Name", new PropertyMappingValue(new List<string>() { "FirstName", "LastName" })}
         };
 
+        private Dictionary<string, PropertyMappingValue> _reviewPropertyMapping = new Dictionary<string, PropertyMappingValue>(StringComparer.OrdinalIgnoreCase)
+        {
+            { "Id", new PropertyMappingValue(new List<string>() { "Id" })},
+            { "SubmittedReview", new PropertyMappingValue(new List<string>() { "SubmittedReview" })},
+            { "Rating", new PropertyMappingValue(new List<string>() { "Rating" })},
+            { "Submitted", new PropertyMappingValue(new List<string>() { "Submitted" })}
+        };
+
         private IList<IPropertyMapping> propertyMappings = new List<IPropertyMapping>();
 
         public PropertyMappingService()
         {
             propertyMappings.Add(new PropertyMapping<ArtistDto, Artist>(_artistPropertyMapping));
+            propertyMappings.Add(new PropertyMapping<ReviewDto, Review>(_reviewPropertyMapping));
         }
 
         public Dictionary<string, PropertyMappingValue> GetPropertyMapping<TSource, TDestination>()

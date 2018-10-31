@@ -8,8 +8,6 @@ using AutoMapper;
 using Microsoft.AspNetCore.JsonPatch;
 using Microsoft.AspNetCore.Mvc;
 using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Threading.Tasks;
 
 namespace AlbumsReviewRESTApi.Controllers
@@ -56,7 +54,7 @@ namespace AlbumsReviewRESTApi.Controllers
 
             var albumEntity = Mapper.Map<Album>(albumToCreate);
 
-            _albumsReviewRepository.AddAlbumForArtist(artistId, albumEntity);
+            await _albumsReviewRepository.AddAlbumForArtist(artistId, albumEntity);
 
             if (!await _albumsReviewRepository.SaveChangesAsync())
             {
@@ -125,7 +123,7 @@ namespace AlbumsReviewRESTApi.Controllers
                 var albumEntity = Mapper.Map<Album>(albumToUpdate);
                 albumEntity.Id = id;
 
-                _albumsReviewRepository.AddAlbumForArtist(artistId, albumEntity);
+                await _albumsReviewRepository.AddAlbumForArtist(artistId, albumEntity);
 
                 if (!await _albumsReviewRepository.SaveChangesAsync())
                 {
@@ -138,7 +136,7 @@ namespace AlbumsReviewRESTApi.Controllers
 
             Mapper.Map(albumToUpdate, albumFromRepo);
 
-            _albumsReviewRepository.updateAlbumForArtist(artistId, albumFromRepo);
+            _albumsReviewRepository.UpdateAlbumForArtist(artistId, albumFromRepo);
 
             if (!await _albumsReviewRepository.SaveChangesAsync())
             {
@@ -151,6 +149,16 @@ namespace AlbumsReviewRESTApi.Controllers
         [HttpPatch("{id}")]
         public async Task<IActionResult> PartiallyUpdateAlbum([FromRoute] Guid artistId, [FromRoute] Guid id, JsonPatchDocument<AlbumForUpdateDto> patchDoc)
         {
+            if (artistId == Guid.Empty)
+            {
+                return BadRequest();
+            }
+
+            if (id == Guid.Empty)
+            {
+                return BadRequest();
+            }
+
             if (patchDoc == null)
             {
                 return BadRequest();
@@ -182,7 +190,7 @@ namespace AlbumsReviewRESTApi.Controllers
 
                 albumToAdd.Id = id;
 
-                _albumsReviewRepository.AddAlbumForArtist(artistId, albumToAdd);
+                await _albumsReviewRepository.AddAlbumForArtist(artistId, albumToAdd);
 
                 if (!await _albumsReviewRepository.SaveChangesAsync())
                 {
@@ -208,7 +216,7 @@ namespace AlbumsReviewRESTApi.Controllers
 
             Mapper.Map(albumToPatch, albumFromRepo);
 
-            _albumsReviewRepository.updateAlbumForArtist(artistId, albumFromRepo);
+            _albumsReviewRepository.UpdateAlbumForArtist(artistId, albumFromRepo);
 
             if (!await _albumsReviewRepository.SaveChangesAsync())
             {

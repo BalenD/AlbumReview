@@ -28,30 +28,31 @@ namespace AlbumsReviewRESTApi.Services.Repositories
         }
 
 
-        public async void AddAlbumForArtist(Guid artistId, Album album)
+        public async Task AddAlbumForArtist(Guid artistId, Album album)
         {
 
-            //  TODO: find out why this doesnt work
-            //var artist = await GetArtistAsync(artistId);
+            var artist = await _context.Artists.Where(x => x.Id == artistId).FirstOrDefaultAsync();
 
-            //if (artist != null)
-            //{
-            //    if (album.Id == Guid.Empty)
-            //    {
-            //        album.Id = Guid.NewGuid();
-            //    }
-            //    album.ArtistId = artist.Id;
-            //    artist.Albums.Add(album);
-            //}
-
-            if (album.Id == Guid.Empty)
+            if (artist != null)
             {
-                album.Id = Guid.NewGuid();
+                if (album.Id == Guid.Empty)
+                {
+                    album.Id = Guid.NewGuid();
+                }
+                album.ArtistId = artist.Id;
+                artist.Albums.Add(album);
             }
 
-            album.ArtistId = artistId;
 
-            await _context.Albums.AddAsync(album);
+            //  fallback in case errors with above
+            //if (album.Id == Guid.Empty)
+            //{
+            //    album.Id = Guid.NewGuid();
+            //}
+
+            //album.ArtistId = artistId;
+
+            //await _context.Albums.AddAsync(album);
 
         }
 
@@ -67,7 +68,7 @@ namespace AlbumsReviewRESTApi.Services.Repositories
                 .FirstOrDefaultAsync();
         }
 
-        public void updateAlbumForArtist(Guid artistId, Album album)
+        public void UpdateAlbumForArtist(Guid artistId, Album album)
         {
             if (album.ArtistId == null)
             {
