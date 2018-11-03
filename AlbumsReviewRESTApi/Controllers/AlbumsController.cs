@@ -12,15 +12,18 @@ using System.Threading.Tasks;
 
 namespace AlbumsReviewRESTApi.Controllers
 {
+    
     [Route("api/artists/{artistId}/albums")]
+    [RouteParameterValidationFilter]
+    [TypeFilter(typeof(RouteParameterResourceValidationFilterAttribute))]
     public class AlbumsController : Controller
     {
-        private IAlbumRepository _albumsReviewRepository;
+        private IAlbumRepository _albumRepository;
         private IPropertyMappingService _propertyMappingService;
 
         public AlbumsController(IAlbumRepository albumsReviewRepository, IPropertyMappingService propertyMappingService)
         {
-            _albumsReviewRepository = albumsReviewRepository;
+            _albumRepository = albumsReviewRepository;
             _propertyMappingService = propertyMappingService;
         }
 
@@ -28,8 +31,7 @@ namespace AlbumsReviewRESTApi.Controllers
         [AlbumResultFilter]
         public async Task<IActionResult> GetAlbums([FromRoute] Guid artistId)
         {
-
-            var albumEntities = await _albumsReviewRepository.GetAlbumsForArtistAsync(artistId);
+            var albumEntities = await _albumRepository.GetAlbumsForArtistAsync(artistId);
             return Ok(albumEntities);
         }
 
@@ -37,10 +39,6 @@ namespace AlbumsReviewRESTApi.Controllers
         [AlbumResultFilter]
         public async Task<IActionResult> CreateAlbum([FromRoute] Guid artistId, [FromBody] AlbumForCreationDto albumToCreate)
         {
-            if (artistId == Guid.Empty)
-            {
-                return BadRequest();
-            }
 
             if (albumToCreate == null)
             {
@@ -54,9 +52,9 @@ namespace AlbumsReviewRESTApi.Controllers
 
             var albumEntity = Mapper.Map<Album>(albumToCreate);
 
-            await _albumsReviewRepository.AddAlbumForArtist(artistId, albumEntity);
+            await _albumRepository.AddAlbumForArtist(artistId, albumEntity);
 
-            if (!await _albumsReviewRepository.SaveChangesAsync())
+            if (!await _albumRepository.SaveChangesAsync())
             {
                 throw new Exception($"adding album to artist {artistId} failed");
             }
@@ -67,26 +65,11 @@ namespace AlbumsReviewRESTApi.Controllers
         }
 
 
-        [HttpGet("{id}", Name = "GetAlbum")]
+        [HttpGet("{albumId}", Name = "GetAlbum")]
         [AlbumResultFilter]
-        public async Task<IActionResult> GetAlbum([FromRoute] Guid id, [FromRoute] Guid artistId)
+        public async Task<IActionResult> GetAlbum([FromRoute] Guid albumId, [FromRoute] Guid artistId)
         {
-            if (id == Guid.Empty)
-            {
-                return BadRequest();
-            }
-
-            if (artistId == Guid.Empty)
-            {
-                return BadRequest();
-            }
-
-            if (!await _albumsReviewRepository.ArtistExists(artistId))
-            {
-                return NotFound();
-            }
-
-            var foundAlbum = await _albumsReviewRepository.GetAlbumForArtistAsync(id, artistId);
+            var foundAlbum = await _albumRepository.GetAlbumForArtistAsync(albumId, artistId);
 
             if (foundAlbum == null)
             {
@@ -96,80 +79,56 @@ namespace AlbumsReviewRESTApi.Controllers
             return Ok(foundAlbum);
         }
 
-        [HttpPut("{id}")]
-        public async Task<IActionResult> UpdateAlbum([FromRoute] Guid artistId, [FromRoute] Guid id, [FromBody] AlbumForUpdateDto albumToUpdate)
+        [HttpPut("{albumId}")]
+        public async Task<IActionResult> UpdateAlbum([FromRoute] Guid artistId, [FromRoute] Guid albumId, [FromBody] AlbumForUpdateDto albumToUpdate)
         {
             if (albumToUpdate == null)
             {
                 return BadRequest();
             }
 
-            if (artistId == Guid.Empty)
-            {
-                return BadRequest();
-            }
-
-            if (!await _albumsReviewRepository.ArtistExists(artistId))
-            {
-                return NotFound();
-            }
-
-            var albumFromRepo = await _albumsReviewRepository.GetAlbumForArtistAsync(id, artistId);
+            var albumFromRepo = await _albumRepository.GetAlbumForArtistAsync(albumId, artistId);
 
             //  Upserting
             if (albumFromRepo == null)
             {
 
                 var albumEntity = Mapper.Map<Album>(albumToUpdate);
-                albumEntity.Id = id;
+                albumEntity.Id = albumId;
 
-                await _albumsReviewRepository.AddAlbumForArtist(artistId, albumEntity);
+                await _albumRepository.AddAlbumForArtist(artistId, albumEntity);
 
-                if (!await _albumsReviewRepository.SaveChangesAsync())
+                if (!await _albumRepository.SaveChangesAsync())
                 {
                     throw new Exception($"Upserting album {albumEntity.Id} for artist {artistId} failed");
                 }
 
-                return CreatedAtRoute("GetAlbum", new { artistId, id = albumEntity.Id }, albumToUpdate);
+                return CreatedAtRoute("GetAlbum", new { artistId, albumId = albumEntity.Id }, albumToUpdate);
             }
 
 
             Mapper.Map(albumToUpdate, albumFromRepo);
 
-            _albumsReviewRepository.UpdateAlbumForArtist(artistId, albumFromRepo);
+            _albumRepository.UpdateAlbumForArtist(artistId, albumFromRepo);
 
-            if (!await _albumsReviewRepository.SaveChangesAsync())
+            if (!await _albumRepository.SaveChangesAsync())
             {
-                throw new Exception($"Updating album {id} for author {artistId} failed on save");
+                throw new Exception($"Updating album {albumId} for author {artistId} failed on save");
             }
 
             return NoContent();
         }
 
-        [HttpPatch("{id}")]
-        public async Task<IActionResult> PartiallyUpdateAlbum([FromRoute] Guid artistId, [FromRoute] Guid id, JsonPatchDocument<AlbumForUpdateDto> patchDoc)
+        [HttpPatch("{albumId}")]
+        public async Task<IActionResult> PartiallyUpdateAlbum([FromRoute] Guid artistId, [FromRoute] Guid albumId, JsonPatchDocument<AlbumForUpdateDto> patchDoc)
         {
-            if (artistId == Guid.Empty)
-            {
-                return BadRequest();
-            }
-
-            if (id == Guid.Empty)
-            {
-                return BadRequest();
-            }
 
             if (patchDoc == null)
             {
                 return BadRequest();
             }
 
-            if (!await _albumsReviewRepository.ArtistExists(artistId))
-            {
-                return NotFound();
-            }
-
-            var albumFromRepo = await _albumsReviewRepository.GetAlbumForArtistAsync(id, artistId);
+            var albumFromRepo = await _albumRepository.GetAlbumForArtistAsync(albumId, artistId);
 
             //  Upserting
 
@@ -188,18 +147,18 @@ namespace AlbumsReviewRESTApi.Controllers
 
                 var albumToAdd = Mapper.Map<Album>(albumForUpdateDto);
 
-                albumToAdd.Id = id;
+                albumToAdd.Id = albumId;
 
-                await _albumsReviewRepository.AddAlbumForArtist(artistId, albumToAdd);
+                await _albumRepository.AddAlbumForArtist(artistId, albumToAdd);
 
-                if (!await _albumsReviewRepository.SaveChangesAsync())
+                if (!await _albumRepository.SaveChangesAsync())
                 {
                     throw new Exception($"Upserting album {albumToAdd.Id} failed for artist {artistId}");
                 }
 
                 var albumToReturn = Mapper.Map<AlbumDto>(albumToAdd);
 
-                return CreatedAtRoute("GetAlbum", new { artistId, id = albumToReturn.Id }, albumToReturn);
+                return CreatedAtRoute("GetAlbum", new { artistId, albumId = albumToReturn.Id }, albumToReturn);
             }
 
             var albumToPatch = Mapper.Map<AlbumForUpdateDto>(albumFromRepo);
@@ -216,41 +175,33 @@ namespace AlbumsReviewRESTApi.Controllers
 
             Mapper.Map(albumToPatch, albumFromRepo);
 
-            _albumsReviewRepository.UpdateAlbumForArtist(artistId, albumFromRepo);
+            _albumRepository.UpdateAlbumForArtist(artistId, albumFromRepo);
 
-            if (!await _albumsReviewRepository.SaveChangesAsync())
+            if (!await _albumRepository.SaveChangesAsync())
             {
-                throw new Exception($"updating album {id} for artist {artistId} failed on save");
+                throw new Exception($"updating album {albumId} for artist {artistId} failed on save");
             }
 
             return NoContent();
         }
 
-        [HttpDelete("{id}")]
-        public async Task<IActionResult> DeleteAlbum([FromRoute] Guid artistId, [FromRoute] Guid id)
+        [HttpDelete("{albumId}")]
+        public async Task<IActionResult> DeleteAlbum([FromRoute] Guid artistId, [FromRoute] Guid albumId)
         {
-            if (id == Guid.Empty)
-            {
-                return BadRequest();
-            }
 
-            if (artistId == Guid.Empty)
-            {
-                return BadRequest();
-            }
 
-            var albumFromRepo = await _albumsReviewRepository.GetAlbumForArtistAsync(id, artistId);
+            var albumFromRepo = await _albumRepository.GetAlbumForArtistAsync(albumId, artistId);
 
             if (albumFromRepo == null)
             {
                 return NotFound();
             }
 
-            _albumsReviewRepository.DeleteAlbum(albumFromRepo);
+            _albumRepository.DeleteAlbum(albumFromRepo);
 
-            if (!await _albumsReviewRepository.SaveChangesAsync())
+            if (!await _albumRepository.SaveChangesAsync())
             {
-                throw new Exception($"deleting for album {id} failed");
+                throw new Exception($"deleting for album {albumId} failed");
             }
 
             return Ok();

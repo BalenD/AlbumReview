@@ -1,7 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Threading.Tasks;
 using AlbumsReviewRESTApi.Services.Repositories;
 using AlbumsReviewRESTApi.Services;
@@ -15,6 +14,7 @@ using Microsoft.AspNetCore.JsonPatch;
 
 namespace AlbumsReviewRESTApi.Controllers
 {
+    [TypeFilter(typeof(RouteParameterValidationFilterAttribute))]
     [Route("api/artists/{artistId}/albums/{albumId}/reviews")]
     public class ReviewsController : Controller
     {
@@ -33,8 +33,10 @@ namespace AlbumsReviewRESTApi.Controllers
         }
 
         [HttpGet( Name = "GetReviewsForAlbum")]
+        [RouteParameterValidationFilter]
         public async Task<IActionResult> GetReviewsForAlbum([FromRoute]Guid albumId, RequestParameters reviewRequestParameters)
         {
+
             if (string.IsNullOrWhiteSpace(reviewRequestParameters.OrderBy))
             {
                 reviewRequestParameters.OrderBy = "Submitted";
@@ -79,20 +81,12 @@ namespace AlbumsReviewRESTApi.Controllers
             return Ok(reviews.ShapeData(reviewRequestParameters.Fields));
         }
 
-        [HttpGet("{id}", Name = "GetReviewForAlbum")]
-        public async Task<IActionResult> GetReviewForAlbum([FromRoute] Guid albumId, [FromRoute] Guid id, [FromQuery] string fields)
+        [HttpGet("{reviewId}", Name = "GetReviewForAlbum")]
+        [RouteParameterValidationFilter]
+        public async Task<IActionResult> GetReviewForAlbum([FromRoute] Guid albumId, [FromRoute] Guid reviewId, [FromQuery] string fields)
         {
-            if (albumId == Guid.Empty)
-            {
-                return BadRequest();
-            }
 
-            if (id == Guid.Empty)
-            {
-                return BadRequest();
-            }
-
-            var reviewForAlbumFromRepo = await _reviewRepository.GetReviewForAlbumAsync(albumId, id);
+            var reviewForAlbumFromRepo = await _reviewRepository.GetReviewForAlbumAsync(albumId, reviewId);
 
             if (reviewForAlbumFromRepo == null)
             {
@@ -121,12 +115,9 @@ namespace AlbumsReviewRESTApi.Controllers
         }
 
         [HttpPost]
+        [RouteParameterValidationFilter]
         public async Task<IActionResult> CreateReviewForAlbum([FromRoute] Guid albumId, [FromBody] ReviewForCreationDto reviewToCreate)
         {
-            if (albumId == Guid.Empty)
-            {
-                return BadRequest();
-            }
 
             if (reviewToCreate == null)
             {
@@ -150,43 +141,35 @@ namespace AlbumsReviewRESTApi.Controllers
 
         }
 
-        [HttpPatch("{id}")]
-        public async Task<IActionResult> UpdateReviewForAlbum([FromRoute] Guid albumId, [FromRoute] Guid id, [FromBody] ReviewForUpdateDto reviewToUpdate)
+        [HttpPatch("{reviewId}")]
+        [RouteParameterValidationFilter]
+        public async Task<IActionResult> UpdateReviewForAlbum([FromRoute] Guid albumId, [FromRoute] Guid reviewId, [FromBody] ReviewForUpdateDto reviewToUpdate)
         {
-            if (albumId == Guid.Empty)
-            {
-                return BadRequest();
-            }
-
-            if (id == Guid.Empty)
-            {
-                return BadRequest();
-            }
 
             if (reviewToUpdate == null)
             {
                 return BadRequest();
             }
 
-            var reviewFromRepo = await _reviewRepository.GetReviewForAlbumAsync(albumId, id);
+            var reviewFromRepo = await _reviewRepository.GetReviewForAlbumAsync(albumId, reviewId);
 
             //  upserting
 
             if (reviewFromRepo == null)
             {
                 var reviewEntity = Mapper.Map<Review>(reviewToUpdate);
-                reviewEntity.Id = id;
+                reviewEntity.Id = reviewId;
 
                 await _reviewRepository.AddReviewForAlbumAsync(albumId, reviewEntity);
 
                 if (!await _reviewRepository.SaveChangesAsync())
                 {
-                    throw new Exception($"upserting review {id} for album {albumId} failed on save");
+                    throw new Exception($"upserting review {reviewId} for album {albumId} failed on save");
                 }
 
                 var reviewToReturn = Mapper.Map<ReviewDto>(reviewEntity);
 
-                return CreatedAtRoute("GetReviewForAlbum", new { albumId, id = reviewToReturn.Id }, reviewToReturn);
+                return CreatedAtRoute("GetReviewForAlbum", new { albumId, reviewId = reviewToReturn.Id }, reviewToReturn);
             }
 
             Mapper.Map(reviewToUpdate, reviewFromRepo);
@@ -195,24 +178,15 @@ namespace AlbumsReviewRESTApi.Controllers
 
             if (!await _reviewRepository.SaveChangesAsync())
             {
-                throw new Exception($"Updating review {id} for album {albumId} failed on save");
+                throw new Exception($"Updating review {reviewId} for album {albumId} failed on save");
             }
 
             return NoContent();
         }
 
-        [HttpPatch("{id}")]
-        public async Task<IActionResult> PartiallyUpdateReviewForAlbum([FromRoute] Guid albumId, [FromRoute] Guid id, [FromBody] JsonPatchDocument<ReviewForUpdateDto> patchDoc)
+        [HttpPatch("{reviewId}")]
+        public async Task<IActionResult> PartiallyUpdateReviewForAlbum([FromRoute] Guid albumId, [FromRoute] Guid reviewId, [FromBody] JsonPatchDocument<ReviewForUpdateDto> patchDoc)
         {
-            if (albumId == Guid.Empty)
-            {
-                return BadRequest();
-            }
-
-            if (id == Guid.Empty)
-            {
-                return BadRequest();
-            }
 
             if (patchDoc == null)
             {
@@ -221,7 +195,7 @@ namespace AlbumsReviewRESTApi.Controllers
 
             //  TODO: check if artist/album exist first
 
-            var reviewFromRepo = await _reviewRepository.GetReviewForAlbumAsync(albumId, id);
+            var reviewFromRepo = await _reviewRepository.GetReviewForAlbumAsync(albumId, reviewId);
 
             //  upserting
 
@@ -241,18 +215,18 @@ namespace AlbumsReviewRESTApi.Controllers
 
                 var reviewToAdd = Mapper.Map<Review>(reviewForUpdateDto);
 
-                reviewToAdd.Id = id;
+                reviewToAdd.Id = reviewId;
 
                 await _reviewRepository.AddReviewForAlbumAsync(albumId, reviewToAdd);
 
                 if (!await _reviewRepository.SaveChangesAsync())
                 {
-                    throw new Exception($"upserting review {id} for album {albumId} failed on save");
+                    throw new Exception($"upserting review {reviewId} for album {albumId} failed on save");
                 }
 
                 var reviewToReturn = Mapper.Map<ReviewDto>(reviewToAdd);
 
-                return CreatedAtRoute("GetReviewForAlbum", new { albumId, id = reviewToReturn.Id }, reviewToReturn);
+                return CreatedAtRoute("GetReviewForAlbum", new { albumId, reviewId = reviewToReturn.Id }, reviewToReturn);
 
             }
 
@@ -273,26 +247,17 @@ namespace AlbumsReviewRESTApi.Controllers
 
             if (!await _reviewRepository.SaveChangesAsync())
             {
-                throw new Exception($"Updating review {id} for album {albumId} failed on save");
+                throw new Exception($"Updating review {reviewId} for album {albumId} failed on save");
             }
 
             return NoContent();
         }
 
-        [HttpDelete("{id}")]
-        public async Task<IActionResult> DeleteReviewForAlbum([FromRoute] Guid albumId, [FromRoute] Guid id)
+        [HttpDelete("{reviewId}")]
+        public async Task<IActionResult> DeleteReviewForAlbum([FromRoute] Guid albumId, [FromRoute] Guid reviewId)
         {
-            if (albumId == Guid.Empty)
-            {
-                return BadRequest();
-            }
 
-            if (albumId == Guid.Empty)
-            {
-                return BadRequest();
-            }
-
-            var reviewFromRepo = await _reviewRepository.GetReviewForAlbumAsync(albumId, id);
+            var reviewFromRepo = await _reviewRepository.GetReviewForAlbumAsync(albumId, reviewId);
 
             if (reviewFromRepo == null)
             {
@@ -303,7 +268,7 @@ namespace AlbumsReviewRESTApi.Controllers
 
             if (!await _reviewRepository.SaveChangesAsync())
             {
-                throw new Exception($"deleting review {id} for album {albumId} failed on save");
+                throw new Exception($"deleting review {reviewId} for album {albumId} failed on save");
             }
 
             return Ok();

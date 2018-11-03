@@ -56,6 +56,7 @@ namespace AlbumsReviewRESTApi
             services.AddDbContext<AlbumsReviewContext>(x => x.UseSqlServer(connectionString));
             //  consider  later between scoped or transcient
             //  and change to multiple repositorys
+            services.AddScoped<IRepository, Repository>();
             services.AddScoped<IArtistRepository, ArtistRepository>();
             services.AddScoped<IAlbumRepository, AlbumRepository>();
             services.AddScoped<IReviewRepository, ReviewRepository>();
