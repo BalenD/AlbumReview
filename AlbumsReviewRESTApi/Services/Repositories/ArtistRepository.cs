@@ -18,14 +18,14 @@ namespace AlbumsReviewRESTApi.Services.Repositories
             _propertyMappingService = propertyMappingService;
         }
 
-        public async void AddArtist(Artist artist)
+        public void AddArtist(Artist artist)
         {
             if (artist.Id == null)
             {
                 artist.Id = Guid.NewGuid();
             }
             
-            await _context.Artists.AddAsync(artist);
+            _context.Artists.Add(artist);
         }
 
 

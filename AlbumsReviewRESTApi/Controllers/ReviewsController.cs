@@ -131,17 +131,19 @@ namespace AlbumsReviewRESTApi.Controllers
 
             var reviewToCreateEntity = Mapper.Map<Review>(reviewToCreate);
 
+            reviewToCreateEntity.Id = Guid.NewGuid();
+
             await _reviewRepository.AddReviewForAlbumAsync(albumId, reviewToCreateEntity);
 
             if (!await _reviewRepository.SaveChangesAsync())
             {
                 throw new Exception($"adding review to album {albumId} failed");
             }
-            return CreatedAtRoute("GetReviewForAlbum", new { albumId =  albumId, id = reviewToCreateEntity.Id }, reviewToCreateEntity);
+            return CreatedAtRoute("GetReviewForAlbum", new { albumId, id = reviewToCreateEntity.Id }, reviewToCreateEntity);
 
         }
 
-        [HttpPatch("{reviewId}")]
+        [HttpPut("{reviewId}")]
         [RouteParameterValidationFilter]
         public async Task<IActionResult> UpdateReviewForAlbum([FromRoute] Guid albumId, [FromRoute] Guid reviewId, [FromBody] ReviewForUpdateDto reviewToUpdate)
         {

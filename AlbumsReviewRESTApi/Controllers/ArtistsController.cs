@@ -125,9 +125,13 @@ namespace AlbumsReviewRESTApi.Controllers
             {
                 return BadRequest();
             }
-
+            
             TryValidateModel(artist);
 
+            if (artist.Id == Guid.Empty)
+            {
+                artist.Id = Guid.NewGuid();
+            }
 
             if (!ModelState.IsValid)
             {

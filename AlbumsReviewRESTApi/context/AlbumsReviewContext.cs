@@ -14,7 +14,7 @@ namespace AlbumsReviewRESTApi.context
         {
             //  for development purposes
             //Database.EnsureDeleted();
-            //Database.Migrate();
+            Database.Migrate();
 
         }
 

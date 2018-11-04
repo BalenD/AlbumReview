@@ -52,6 +52,8 @@ namespace AlbumsReviewRESTApi.Controllers
 
             var albumEntity = Mapper.Map<Album>(albumToCreate);
 
+            albumEntity.Id = Guid.NewGuid();
+
             await _albumRepository.AddAlbumForArtist(artistId, albumEntity);
 
             if (!await _albumRepository.SaveChangesAsync())
@@ -60,7 +62,7 @@ namespace AlbumsReviewRESTApi.Controllers
             }
 
 
-            return CreatedAtRoute("GetAlbum", new { artistId, id = albumToCreate.Id }, albumEntity);
+            return CreatedAtRoute("GetAlbum", new { artistId, id = albumEntity.Id }, albumEntity);
 
         }
 
