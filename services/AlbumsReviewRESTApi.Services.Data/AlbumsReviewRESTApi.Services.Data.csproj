@@ -1,0 +1,20 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netcoreapp2.1</TargetFramework>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\data\AlbumsReviewRESTApi.Data\AlbumsReviewRESTApi.Data.csproj" />
+    <ProjectReference Include="..\AlbumsReviewRESTApi.Services.Web\AlbumsReviewRESTApi.Services.Web.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="DtoModels\" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="System.Linq.Dynamic.Core" Version="1.0.9" />
+  </ItemGroup>
+
+</Project>
