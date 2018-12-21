@@ -1,0 +1,21 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netcoreapp2.1</TargetFramework>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\data\AlbumReview.Data.Models\AlbumReview.Data.Models.csproj" />
+    <ProjectReference Include="..\..\data\AlbumReview.Data\AlbumReview.Data.csproj" />
+    <ProjectReference Include="..\AlbumReview.Services.Web\AlbumReview.Services.Web.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="DtoModels\" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="System.Linq.Dynamic.Core" Version="1.0.9" />
+  </ItemGroup>
+
+</Project>
