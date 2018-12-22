@@ -4,7 +4,7 @@ using Microsoft.AspNetCore.Mvc.Filters;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using AlbumReview.Data.Models;
-using AlbumReview.Services.Data.DtoModels;
+using AlbumReview.Web.DtoModels;
 
 namespace AlbumReview.Web.filters
 {

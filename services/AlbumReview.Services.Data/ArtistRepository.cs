@@ -1,24 +1,20 @@
 ﻿using AlbumReview.Data;
 using AlbumReview.Data.Models;
 using AlbumReview.Services.Data.helpers;
-using AlbumReview.Services.Web;
-using AlbumReview.Services.Data.DtoModels;
 using Microsoft.EntityFrameworkCore;
 using System;
 using System.Linq;
 using System.Threading.Tasks;
 using AlbumReview.Data.Repositories;
+using System.Collections.Generic;
 
 namespace AlbumReview.Services.Data
 {
     public class ArtistRepository : RepositoryBase<Artist>, IArtistRepository
     {
-        private IPropertyMappingService _propertyMappingService;
 
-        public ArtistRepository(AlbumReviewContext context, IPropertyMappingService propertyMappingService) : base(context)
+        public ArtistRepository(AlbumReviewContext context) : base(context)
         {
-            _propertyMappingService = propertyMappingService;
-            _propertyMappingService.AddArtistPropertyMapping<ArtistDto, Artist>();
             
         }
 
@@ -29,10 +25,15 @@ namespace AlbumReview.Services.Data
                 .FirstOrDefaultAsync(x => x.Id == artistId);
         }
 
-        public async Task<PagedList<Artist>> GetArtistsAsync(string orderBy, string searchQuery, int pageNumber, int pageSize)
+        public async Task<PagedList<Artist>> GetArtistsAsync(
+            string orderBy,
+            string searchQuery,
+            int pageNumber,
+            int pageSize,
+            IDictionary<string, IEnumerable<string>> propertyMapping)
         {
             var collectionBeforePaging = _context.Artists
-                            .ApplySort(orderBy, _propertyMappingService.GetPropertyMapping<ArtistDto, Artist>());
+                            .ApplySort(orderBy, propertyMapping);
 
 
             if (!string.IsNullOrEmpty(searchQuery))

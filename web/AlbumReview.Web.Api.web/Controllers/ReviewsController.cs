@@ -10,7 +10,7 @@ using AlbumReview.Services.Data;
 using AlbumReview.Data.Models;
 using AlbumReview.Web.Helpers;
 using AlbumReview.Web.filters;
-using AlbumReview.Services.Data.DtoModels;
+using AlbumReview.Web.DtoModels;
 
 namespace AlbumReview.Web.Controllers
 {
@@ -28,9 +28,9 @@ namespace AlbumReview.Web.Controllers
                                  ITypeHelperService typeHelperService, IUrlHelper urlHelper)
         {
             _reviewRepository = reviewRepository;
-            _propertyMappingService = propertyMappingService;
             _typeHelperService = typeHelperService;
             _urlHelper = urlHelper;
+            _propertyMappingService = propertyMappingService;
         }
 
         [HttpGet( Name = "GetReviewsForAlbum")]
@@ -42,7 +42,7 @@ namespace AlbumReview.Web.Controllers
             {
                 reviewRequestParameters.OrderBy = "Submitted";
             }
-            if (!_propertyMappingService.validMappingExistsFor<ReviewDto, Review>(reviewRequestParameters.Fields))
+            if (!_propertyMappingService.ValidMappingExistsFor<ReviewDto, Review>(reviewRequestParameters.Fields))
             {
                 return BadRequest();
             }
@@ -51,8 +51,10 @@ namespace AlbumReview.Web.Controllers
             {
                 return BadRequest();
             }
-            var reviewsForAlbumPagedList = await _reviewRepository.GetReviewsForAlbumAsync(albumId, reviewRequestParameters.OrderBy,
-                                                                                           reviewRequestParameters.PageNumber, reviewRequestParameters.PageSize);
+            var reviewsForAlbumPagedList = await _reviewRepository.GetReviewsForAlbumAsync(
+                albumId, reviewRequestParameters.OrderBy,
+                reviewRequestParameters.PageNumber, reviewRequestParameters.PageSize,
+                _propertyMappingService.GetPropertyMapping<ReviewDto, Review>());
 
             var previousPageLink = reviewsForAlbumPagedList.HasPrevious ? CreateUrlForReviewResource(reviewRequestParameters, PageType.PreviousPage) : null;
             var nextPageLink = reviewsForAlbumPagedList.HasNext ? CreateUrlForReviewResource(reviewRequestParameters, PageType.NextPage) : null;
@@ -97,7 +99,7 @@ namespace AlbumReview.Web.Controllers
 
             if (fields != null)
             {
-                if (!_propertyMappingService.validMappingExistsFor<ReviewDto, Review>(fields))
+                if (!_propertyMappingService.ValidMappingExistsFor<ReviewDto, Review>(fields))
                 {
                     return BadRequest();
                 }

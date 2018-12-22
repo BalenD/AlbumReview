@@ -6,40 +6,16 @@ namespace AlbumReview.Services.Web
 {
     public class PropertyMappingService : IPropertyMappingService
     {
-        private readonly Dictionary<string, PropertyMappingValue> _artistPropertyMapping = new Dictionary<string, PropertyMappingValue>(StringComparer.OrdinalIgnoreCase)
-        {
-            { "Id", new PropertyMappingValue(new List<string>() { "Id" })},
-            { "StageName", new PropertyMappingValue(new List<string>() { "StageName" })},
-            { "Age", new PropertyMappingValue(new List<string>() { "DateOfBirth" })},
-            { "Name", new PropertyMappingValue(new List<string>() { "FirstName", "LastName" })}
-        };
-
-        private readonly Dictionary<string, PropertyMappingValue> _reviewPropertyMapping = new Dictionary<string, PropertyMappingValue>(StringComparer.OrdinalIgnoreCase)
-        {
-            { "Id", new PropertyMappingValue(new List<string>() { "Id" })},
-            { "SubmittedReview", new PropertyMappingValue(new List<string>() { "SubmittedReview" })},
-            { "Rating", new PropertyMappingValue(new List<string>() { "Rating" })},
-            { "Submitted", new PropertyMappingValue(new List<string>() { "Submitted" })}
-        };
 
         private IList<IPropertyMapping> propertyMappings = new List<IPropertyMapping>();
         
-        public void AddPropertyMapping<TSource, TDestination>(Dictionary<string, PropertyMappingValue> mapping)
+        public void AddPropertyMapping<TSource, TDestination>(Dictionary<string, IEnumerable<string>> mapping)
         {
             propertyMappings.Add(new PropertyMapping<TSource, TDestination>(mapping));
+            
         }
 
-        public void AddArtistPropertyMapping<TSource, TDestination>()
-        {
-            propertyMappings.Add(new PropertyMapping<TSource, TDestination>(_artistPropertyMapping));
-        }
-
-        public void AddReviewPropertyMapping<TSource, TDestination>()
-        {
-            propertyMappings.Add(new PropertyMapping<TSource, TDestination>(_reviewPropertyMapping));
-        }
-
-        public Dictionary<string, PropertyMappingValue> GetPropertyMapping<TSource, TDestination>()
+        public Dictionary<string, IEnumerable<string>> GetPropertyMapping<TSource, TDestination>()
         {
             var matchingMapping = propertyMappings.OfType<PropertyMapping<TSource, TDestination>>();
 
@@ -51,7 +27,7 @@ namespace AlbumReview.Services.Web
             throw new Exception($"Can't find property mapping instance for <{typeof(TSource)}>");
         }
 
-        public bool validMappingExistsFor<TSource, TDestination>(string fields)
+        public bool ValidMappingExistsFor<TSource, TDestination>(string fields)
         {
             var propertyMapping = GetPropertyMapping<TSource, TDestination>();
 

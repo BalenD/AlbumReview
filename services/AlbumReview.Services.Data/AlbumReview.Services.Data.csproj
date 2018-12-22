@@ -7,11 +7,6 @@
   <ItemGroup>
     <ProjectReference Include="..\..\data\AlbumReview.Data.Models\AlbumReview.Data.Models.csproj" />
     <ProjectReference Include="..\..\data\AlbumReview.Data\AlbumReview.Data.csproj" />
-    <ProjectReference Include="..\AlbumReview.Services.Web\AlbumReview.Services.Web.csproj" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <Folder Include="DtoModels\" />
   </ItemGroup>
 
   <ItemGroup>

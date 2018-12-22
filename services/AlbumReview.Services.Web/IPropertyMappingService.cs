@@ -4,9 +4,8 @@ namespace AlbumReview.Services.Web
 {
     public interface IPropertyMappingService
     {
-        bool validMappingExistsFor<TSource, TDestination>(string fields);
-        Dictionary<string, PropertyMappingValue> GetPropertyMapping<TSource, TDestination>();
-        void AddArtistPropertyMapping<TSource, TDestination>();
-        void AddReviewPropertyMapping<TSource, TDestination>();
+        bool ValidMappingExistsFor<TSource, TDestination>(string fields);
+        Dictionary<string, IEnumerable<string>> GetPropertyMapping<TSource, TDestination>();
+        void AddPropertyMapping<TSource, TDestination>(Dictionary<string, IEnumerable<string>> mapping);
     }
 }

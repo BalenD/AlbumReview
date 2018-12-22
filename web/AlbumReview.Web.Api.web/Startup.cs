@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Builder;
+﻿using System;
+using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Formatters;
@@ -9,12 +10,13 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Newtonsoft.Json.Serialization;
 using AlbumReview.Services.Data;
-using AlbumReview.Services.Data.DtoModels;
 using AlbumReview.Services.Web;
 using AlbumReview.Data.Models;
 using AlbumReview.Data;
 using AlbumReview.Web.Helpers;
 using AlbumReview.Web.Api.services;
+using System.Collections.Generic;
+using AlbumReview.Web.DtoModels;
 
 namespace AlbumReview.Web
 {
@@ -51,8 +53,6 @@ namespace AlbumReview.Web
 
             services.AddScoped<IPaginationUrlHelper, PaginationUrlHelper>();
 
-            //  consider  later between scoped or transcient
-            //  and change to multiple repositorys
             services.AddScoped<IArtistRepository, ArtistRepository>();
             services.AddScoped<IAlbumRepository, AlbumRepository>();
             services.AddScoped<IReviewRepository, ReviewRepository>();
@@ -65,7 +65,28 @@ namespace AlbumReview.Web
                 return new UrlHelper(actionContext);
             });
 
-            services.AddTransient<IPropertyMappingService, PropertyMappingService>();
+            services.AddSingleton<IPropertyMappingService, PropertyMappingService>(implementationFactory => 
+            {
+                var pms = new PropertyMappingService();
+                pms.AddPropertyMapping<ArtistDto, Artist>(new Dictionary<string, IEnumerable<string>>(StringComparer.OrdinalIgnoreCase)
+                {
+                    { "Id", new List<string>() { "Id" }},
+                    { "StageName", new List<string>() { "StageName" }},
+                    { "Age", new List<string>() { "DateOfBirth" }},
+                    { "Name", new List<string>() { "FirstName", "LastName" }}
+                });
+
+                pms.AddPropertyMapping<ReviewDto, Review>(new Dictionary<string, IEnumerable<string>>(StringComparer.OrdinalIgnoreCase)
+                {
+                    { "Id", new List<string>() { "Id" }},
+                    { "SubmittedReview", new List<string>() { "SubmittedReview" }},
+                    { "Rating", new List<string>() { "Rating" }},
+                    { "Submitted", new List<string>() { "Submitted" }}
+
+                });
+
+                return pms;
+            });
 
             services.AddTransient<ITypeHelperService, TypeHelperService>();
 

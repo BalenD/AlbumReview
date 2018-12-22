@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Dynamic;
 using System.Reflection;
-using AlbumReview.Services.Data.DtoModels;
+using AlbumReview.Web.DtoModels;
 
 namespace AlbumReview.Web.Helpers
 {

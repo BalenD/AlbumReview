@@ -7,7 +7,7 @@ using AlbumReview.Web.filters;
 using AlbumReview.Services.Web;
 using AlbumReview.Services.Data;
 using AlbumReview.Data.Models;
-using AlbumReview.Services.Data.DtoModels;
+using AlbumReview.Web.DtoModels;
 using AlbumReview.Web.Helpers;
 
 namespace AlbumReview.Web.Controllers

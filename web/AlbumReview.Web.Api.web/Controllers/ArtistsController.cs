@@ -10,7 +10,7 @@ using System.Dynamic;
 using AlbumReview.Services.Web;
 using AlbumReview.Services.Data;
 using AlbumReview.Data.Models;
-using AlbumReview.Services.Data.DtoModels;
+using AlbumReview.Web.DtoModels;
 using Microsoft.Extensions.Logging;
 using AlbumReview.Web.Api.services;
 
@@ -39,7 +39,6 @@ namespace AlbumReview.Web.Controllers
             _logger = logger;
             _paginationUrlHelper = paginationUrlHelper;
             _propertyMappingService = propertyMappingService;
-            _propertyMappingService.AddArtistPropertyMapping<ArtistDto, Artist>();
         }
 
         
@@ -51,19 +50,21 @@ namespace AlbumReview.Web.Controllers
                 artistsRequestParameters.OrderBy = "StageName";
             }
 
-            if (!_propertyMappingService.validMappingExistsFor<ArtistDto, Artist>(artistsRequestParameters.Fields))
+            if (!string.IsNullOrWhiteSpace(artistsRequestParameters.Fields))
             {
-                return BadRequest();
+
+                if (!_typeHelperService.TypeHasProperties<ArtistDto>(artistsRequestParameters.Fields))
+                {
+                    return BadRequest();
+                }
             }
 
-            if (!_typeHelperService.TypeHasProperties<ArtistDto>(artistsRequestParameters.Fields))
-            {
-                return BadRequest();
-            }
 
 
-            var artistPagedList = await _artistRepository.GetArtistsAsync(artistsRequestParameters.OrderBy, artistsRequestParameters.SearchQuery,
-                                                                          artistsRequestParameters.PageNumber, artistsRequestParameters.PageSize);
+            var artistPagedList = await _artistRepository.GetArtistsAsync(
+                artistsRequestParameters.OrderBy, artistsRequestParameters.SearchQuery,
+                artistsRequestParameters.PageNumber, artistsRequestParameters.PageSize,
+                _propertyMappingService.GetPropertyMapping<ArtistDto, Artist>());
 
             var previousPageLink = artistPagedList.HasPrevious ? _paginationUrlHelper.CreateUrlForResource(artistsRequestParameters, PageType.PreviousPage, "GetArtists") : null;
             var nextPageLink = artistPagedList.HasNext ? _paginationUrlHelper.CreateUrlForResource(artistsRequestParameters, PageType.NextPage, "GetArtists") : null;
@@ -108,7 +109,7 @@ namespace AlbumReview.Web.Controllers
 
             if (fields != null)
             {
-                if (!_propertyMappingService.validMappingExistsFor<ArtistDto, Artist>(fields))
+                if (!_propertyMappingService.ValidMappingExistsFor<ArtistDto, Artist>(fields))
                 {
                     return BadRequest();
                 }

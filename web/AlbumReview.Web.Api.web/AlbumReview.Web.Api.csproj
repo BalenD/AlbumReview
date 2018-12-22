@@ -18,6 +18,7 @@
     <ProjectReference Include="..\..\data\AlbumReview.Data.Models\AlbumReview.Data.Models.csproj" />
     <ProjectReference Include="..\..\data\AlbumReview.Data\AlbumReview.Data.csproj" />
     <ProjectReference Include="..\..\services\AlbumReview.Services.Data\AlbumReview.Services.Data.csproj" />
+    <ProjectReference Include="..\..\services\AlbumReview.Services.Web\AlbumReview.Services.Web.csproj" />
   </ItemGroup>
 
 </Project>

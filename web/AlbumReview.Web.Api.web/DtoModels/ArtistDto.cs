@@ -1,7 +1,7 @@
 ﻿using System;
 using System.ComponentModel.DataAnnotations;
 
-namespace AlbumReview.Services.Data.DtoModels
+namespace AlbumReview.Web.DtoModels
 {
     public class ArtistDto
     {

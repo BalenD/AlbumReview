@@ -1,6 +1,6 @@
 ﻿using System.Collections.Generic;
 
-namespace AlbumReview.Services.Data.DtoModels
+namespace AlbumReview.Web.DtoModels
 {
     public class EntityWithPaginationMetadataDto<T>
     {

@@ -2,13 +2,12 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Dynamic.Core;
-using AlbumReview.Services.Web;
 
 namespace AlbumReview.Services.Data.helpers
 {
     public static class IQueryableExtensions
     {
-        public static IQueryable<T> ApplySort<T>(this IQueryable<T> source, string orderBy, Dictionary<string, PropertyMappingValue> mappingDictionary)
+        public static IQueryable<T> ApplySort<T>(this IQueryable<T> source, string orderBy, IDictionary<string, IEnumerable<string>> mappingDictionary)
         {
             if (source == null)
             {
@@ -33,15 +32,15 @@ namespace AlbumReview.Services.Data.helpers
             foreach (var orderByClause in orderByAfterSplit.Reverse())
             {
                 //  trim orderByClause, as it might contain leading or trailing spaces
-                var trimmedOrderByClause = orderByClause.Trim();
+                string trimmedOrderByClause = orderByClause.Trim();
 
                 //  if the sort option ends with " desc", order by descending, otherwise ascending
-                var orderDescending = trimmedOrderByClause.EndsWith(" desc");
+                bool orderDescending = trimmedOrderByClause.EndsWith(" desc");
 
                 //  remove the " asc" or " desc" from the orderByClause
                 //  so we get the property name to look for in the mapping dictionary
-                var indexOfFirstSpace = trimmedOrderByClause.IndexOf(" ");
-                var propertyName = indexOfFirstSpace == -1 ? trimmedOrderByClause : trimmedOrderByClause.Remove(indexOfFirstSpace);
+                int indexOfFirstSpace = trimmedOrderByClause.IndexOf(" ");
+                string propertyName = indexOfFirstSpace == -1 ? trimmedOrderByClause : trimmedOrderByClause.Remove(indexOfFirstSpace);
 
 
                 //  find the matching property
@@ -60,13 +59,8 @@ namespace AlbumReview.Services.Data.helpers
 
                 //  run through the property names in reverse
                 //  so the orderby clauses are applied in the correct order
-                foreach (var destinationProperty in propertyMappingValue.DestinationProperties.Reverse())
+                foreach (var destinationProperty in propertyMappingValue.Reverse())
                 {
-                    //  revert sort order if neccesary
-                    if (propertyMappingValue.Revert)
-                    {
-                        orderDescending = !orderDescending;
-                    }
                     
                     source = source.OrderBy(destinationProperty + (orderDescending ? " descending" : " ascending"));
                 }
