@@ -13,12 +13,13 @@ using AlbumReview.Services.Data;
 using AlbumReview.Services.Web;
 using AlbumReview.Data.Models;
 using AlbumReview.Data;
-using AlbumReview.Web.Helpers;
-using AlbumReview.Web.Api.services;
+using AlbumReview.Web.Api.Helpers;
 using System.Collections.Generic;
-using AlbumReview.Web.DtoModels;
+using AlbumReview.Web.Api.DtoModels;
+using AlbumReview.Web.Api.services;
+using System.Linq;
 
-namespace AlbumReview.Web
+namespace AlbumReview.Web.Api
 {
     public class Startup
     {
@@ -32,14 +33,16 @@ namespace AlbumReview.Web
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
-            services.AddMvc(setupAction => 
+            services.AddMvc(setupAction =>
             {
                 setupAction.ReturnHttpNotAcceptable = true;
-                setupAction.OutputFormatters.Add(new XmlDataContractSerializerOutputFormatter());
 
-                setupAction.InputFormatters.Add(new XmlSerializerInputFormatter(setupAction));
+                var jsonOutputFormatter = setupAction.OutputFormatters.OfType<JsonOutputFormatter>().FirstOrDefault();
 
-
+                if (jsonOutputFormatter != null)
+                {
+                    jsonOutputFormatter.SupportedMediaTypes.Add("application/vnd.BD.json+hateoas");
+                }
             })
             .AddJsonOptions(options => 
             {
@@ -52,6 +55,8 @@ namespace AlbumReview.Web
             services.AddDbContext<AlbumReviewContext>(x => x.UseSqlServer(connectionString, y => y.MigrationsAssembly("AlbumReview.Data")));
 
             services.AddScoped<IPaginationUrlHelper, PaginationUrlHelper>();
+            services.AddScoped<IControllerHelper, ControllerHelper>();
+            services.AddScoped<IHateoasHelper, HateoasHelper>();
 
             services.AddScoped<IArtistRepository, ArtistRepository>();
             services.AddScoped<IAlbumRepository, AlbumRepository>();
@@ -114,6 +119,10 @@ namespace AlbumReview.Web
                 
 
                 config.CreateMap<Artist, ArtistDto>()
+                .ForMember(dest => dest.Name, opt => opt.MapFrom(src => $"{src.FirstName} {src.LastName}"))
+                .ForMember(dest => dest.Age, opt => opt.MapFrom(src => src.DateOfBirth.CalculateAge()));
+
+                config.CreateMap<Artist, LinkedArtistDto>()
                 .ForMember(dest => dest.Name, opt => opt.MapFrom(src => $"{src.FirstName} {src.LastName}"))
                 .ForMember(dest => dest.Age, opt => opt.MapFrom(src => src.DateOfBirth.CalculateAge()));
 

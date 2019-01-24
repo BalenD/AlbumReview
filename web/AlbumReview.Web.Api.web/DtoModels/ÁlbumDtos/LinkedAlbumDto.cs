@@ -1,9 +1,9 @@
 ﻿using System;
 using System.ComponentModel.DataAnnotations;
 
-namespace AlbumReview.Web.DtoModels
+namespace AlbumReview.Web.Api.DtoModels.ÁlbumDtos
 {
-    public class AlbumDto
+    public class LinkedAlbumDto 
     {
         [Required(AllowEmptyStrings = false, ErrorMessage = "Album should have an id")]
         public Guid Id { get; set; }

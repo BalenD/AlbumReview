@@ -1,7 +1,7 @@
 ﻿using Microsoft.AspNetCore;
 using Microsoft.AspNetCore.Hosting;
 
-namespace AlbumReview.Web
+namespace AlbumReview.Web.Api
 {
     public class Program
     {

@@ -1,4 +1,4 @@
-﻿namespace AlbumReview.Web.Helpers
+﻿namespace AlbumReview.Web.Api.Helpers
 {
     public class RequestParameters
     {

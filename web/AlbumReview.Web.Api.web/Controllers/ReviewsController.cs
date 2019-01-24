@@ -8,11 +8,11 @@ using Microsoft.AspNetCore.JsonPatch;
 using AlbumReview.Services.Web;
 using AlbumReview.Services.Data;
 using AlbumReview.Data.Models;
-using AlbumReview.Web.Helpers;
-using AlbumReview.Web.filters;
-using AlbumReview.Web.DtoModels;
+using AlbumReview.Web.Api.Helpers;
+using AlbumReview.Web.Api.filters;
+using AlbumReview.Web.Api.DtoModels;
 
-namespace AlbumReview.Web.Controllers
+namespace AlbumReview.Web.Api.Controllers
 {
     [ApiController]
     [TypeFilter(typeof(RouteParameterValidationFilterAttribute))]

@@ -4,9 +4,9 @@ using Microsoft.AspNetCore.Mvc.Filters;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using AlbumReview.Data.Models;
-using AlbumReview.Web.DtoModels;
+using AlbumReview.Web.Api.DtoModels;
 
-namespace AlbumReview.Web.filters
+namespace AlbumReview.Web.Api.filters
 {
     public class AlbumResultFilterAttribute : ResultFilterAttribute
     {

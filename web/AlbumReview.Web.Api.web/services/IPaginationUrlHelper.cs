@@ -1,4 +1,4 @@
-﻿using AlbumReview.Web.Helpers;
+﻿using AlbumReview.Web.Api.Helpers;
 
 namespace AlbumReview.Web.Api.services
 {

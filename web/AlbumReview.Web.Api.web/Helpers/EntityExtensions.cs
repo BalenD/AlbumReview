@@ -2,28 +2,14 @@
 using System.Collections.Generic;
 using System.Dynamic;
 using System.Reflection;
-using AlbumReview.Web.DtoModels;
+using AlbumReview.Web.Api.DtoModels;
 
-namespace AlbumReview.Web.Helpers
+namespace AlbumReview.Web.Api.Helpers
 {
     public static class EntityExtensions
     {
-        public static ExpandoObject ShapeData(this ArtistDto artist, string fields)
-        {
-            return Datashaping(artist, fields);
-        }
 
-        public static ExpandoObject ShapeData(this AlbumDto album, string fields)
-        {
-            return Datashaping(album, fields);
-        }
-
-        public static ExpandoObject ShapeData(this ReviewDto review, string fields)
-        {
-            return Datashaping(review, fields);
-        }
-
-        private static ExpandoObject Datashaping<T>(this T source, string fields)
+        public static ExpandoObject ShapeData<T>(this T source, string fields)
         {
             if (source == null)
             {

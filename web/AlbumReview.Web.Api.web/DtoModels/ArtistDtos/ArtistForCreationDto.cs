@@ -1,11 +1,10 @@
 ﻿using System;
 using System.ComponentModel.DataAnnotations;
 
-namespace AlbumReview.Web.DtoModels
+namespace AlbumReview.Web.Api.DtoModels
 {
     public class ArtistForCreationDto
     {
-        public Guid Id { get; set; }
         [Required(AllowEmptyStrings = false, ErrorMessage = "Artist should have a stagename")]
         [StringLength(225, ErrorMessage = "Artist stagename should be less than 225 characters")]
         public string StageName { get; set; }

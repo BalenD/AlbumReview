@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Dynamic;
 using System.Reflection;
 
-namespace AlbumReview.Web.Helpers
+namespace AlbumReview.Web.Api.Helpers
 {
     public static class IEnumerableExtensions
     {

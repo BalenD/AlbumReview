@@ -3,14 +3,19 @@ using Microsoft.AspNetCore.JsonPatch;
 using Microsoft.AspNetCore.Mvc;
 using System;
 using System.Threading.Tasks;
-using AlbumReview.Web.filters;
+using AlbumReview.Web.Api.filters;
 using AlbumReview.Services.Web;
 using AlbumReview.Services.Data;
 using AlbumReview.Data.Models;
-using AlbumReview.Web.DtoModels;
-using AlbumReview.Web.Helpers;
+using AlbumReview.Web.Api.DtoModels;
+using AlbumReview.Web.Api.Helpers;
+using AlbumReview.Web.Api.Api.Helpers;
+using AlbumReview.Web.Api.services;
+using System.Collections.Generic;
+using System.Linq;
+using System.Dynamic;
 
-namespace AlbumReview.Web.Controllers
+namespace AlbumReview.Web.Api.Controllers
 {
 
     [Route("api/artists/{artistId}/albums")]
@@ -18,20 +23,70 @@ namespace AlbumReview.Web.Controllers
     [RouteParameterValidationFilter]
     public class AlbumsController : Controller
     {
-        private IAlbumRepository _albumRepository;
+        private readonly IAlbumRepository _albumRepository;
+        private readonly IControllerHelper _controllerHelper;
+        private readonly IHateoasHelper _hateoasHelper;
+        private readonly ITypeHelperService _typeHelperService;
 
-        public AlbumsController(IAlbumRepository albumsReviewRepository, IPropertyMappingService propertyMappingService)
+        public AlbumsController(IAlbumRepository albumsReviewRepository, IPropertyMappingService propertyMappingService,
+                                IControllerHelper controllerHelper, IHateoasHelper hateoasHelper, ITypeHelperService typeHelperService)
         {
             _albumRepository = albumsReviewRepository;
+            _controllerHelper = controllerHelper;
+            _hateoasHelper = hateoasHelper;
+            _typeHelperService = typeHelperService;
         }
 
         [HttpGet]
         [AlbumResultFilter]
-        public async Task<IActionResult> GetAlbums([FromRoute] Guid artistId)
+        public async Task<IActionResult> GetAlbums([FromRoute] Guid artistId, [FromQuery] string fields)
         {
 
             var albumEntities = await _albumRepository.GetAlbumsForArtistAsync(artistId);
-            return Ok(albumEntities);
+
+            var albumsToReturn = Mapper.Map<AlbumDto>(albumEntities);
+
+            if (!string.IsNullOrWhiteSpace(fields))
+            {
+                if (!_typeHelperService.TypeHasProperties<AlbumDto>(fields))
+                {
+                    return BadRequest();
+                }
+
+                var shapedAlbumsToReturn = albumsToReturn.ShapeData(fields);
+                return Ok(shapedAlbumsToReturn);
+            }
+            else
+            {
+                return Ok(albumsToReturn);
+            }
+            
+        }
+
+        [RequestMatchesMediaTypeHeader("Content-Type", new string[] { "application/vnd.BD.json+hateoas" })]
+        public async Task<IActionResult> GetAlbumsWithHateoas([FromRoute] Guid artistId, [FromQuery] string fields)
+        {
+            if (!_typeHelperService.TypeHasProperties<AlbumDto>(fields))
+            {
+                return BadRequest();
+            }
+
+            var albumEntities = await _albumRepository.GetAlbumsForArtistAsync(artistId);
+
+            var albums = Mapper.Map<IEnumerable<AlbumDto>>(albumEntities);
+
+            var shapedAlbums = albums.Select(album =>
+            {
+                return _controllerHelper.ShapeAndAddLinkToObject(album, "Album", fields);
+            });
+
+            var resourceLinks = _hateoasHelper.CreateLinksForChildResources("Album", new { artistId });
+
+            var linkedResourceCollection = new ExpandoObject();
+            ((IDictionary<string, object>)linkedResourceCollection).Add("records", shapedAlbums);
+            ((IDictionary<string, object>)linkedResourceCollection).Add("links", resourceLinks);
+            return Ok(linkedResourceCollection);
+
         }
 
         [HttpPost]

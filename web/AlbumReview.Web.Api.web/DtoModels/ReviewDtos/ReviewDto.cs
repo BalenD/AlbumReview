@@ -1,7 +1,7 @@
 ﻿using System;
 using System.ComponentModel.DataAnnotations;
 
-namespace AlbumReview.Web.DtoModels
+namespace AlbumReview.Web.Api.DtoModels
 {
     public class ReviewDto
     {

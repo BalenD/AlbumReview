@@ -2,7 +2,7 @@
 using Microsoft.AspNetCore.Mvc.Filters;
 using System;
 
-namespace AlbumReview.Web.filters
+namespace AlbumReview.Web.Api.filters
 {
     public class RouteParameterValidationFilterAttribute : ActionFilterAttribute
     {
